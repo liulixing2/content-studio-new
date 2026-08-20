@@ -114,6 +114,11 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+.manual-panel,
+.quality-panel {
+  grid-column: 1 / -1;
+}
+
 label {
   display: block;
   color: #475569;
@@ -131,6 +136,18 @@ textarea {
   display: grid;
   gap: 8px;
   margin: 14px 0 22px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.hint {
+  color: #64748b;
+  line-height: 1.6;
 }
 
 .option {
@@ -210,6 +227,32 @@ textarea {
 
 .library-item small {
   color: #64748b;
+}
+
+.prompt-box {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 18px;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  background: #f8fafc;
+}
+
+.prompt-box small {
+  color: #64748b;
+}
+
+.quality-result {
+  padding: 10px 12px;
+  background: #fff7ed;
+  border-left: 4px solid #f97316;
+  color: #9a3412;
+}
+
+.quality-result.pass {
+  background: #ecfdf5;
+  border-left-color: #10b981;
+  color: #047857;
 }
 
 .empty {

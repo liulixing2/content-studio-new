@@ -5,7 +5,15 @@ from rest_framework.response import Response
 
 from .models import Article, ArticleVersion
 from .serializers import ArticleSerializer
-from .services import mock_article, mock_directions, mock_titles, render_article_template
+from .services import (
+    build_manual_prompt,
+    check_article_quality,
+    import_pasted_article,
+    mock_article,
+    mock_directions,
+    mock_titles,
+    render_article_template,
+)
 
 
 @api_view(["POST"])
@@ -28,6 +36,29 @@ def generate_draft(request):
     rendered = render_article_template(body)
     # Drafts are intentionally not saved. The user must click save_article.
     return Response({"mode": "mock", "draft": body, "rendered": rendered, "saved": False})
+
+
+@api_view(["POST"])
+def generate_manual_prompt(request):
+    stage = request.data.get("stage") or "draft"
+    context = request.data.get("context") or {}
+    return Response({"prompt": build_manual_prompt(stage, context)})
+
+
+@api_view(["POST"])
+def import_draft_from_paste(request):
+    title = request.data.get("title") or "未命名公众号文章"
+    pasted_text = request.data.get("pasted_text") or ""
+    keywords = request.data.get("keywords") or ""
+    body = import_pasted_article(title, pasted_text, keywords)
+    rendered = render_article_template(body)
+    return Response({"draft": body, "rendered": rendered, "saved": False})
+
+
+@api_view(["POST"])
+def quality_check(request):
+    body = request.data.get("draft") or {}
+    return Response({"report": check_article_quality(body), "saved": False})
 
 
 @api_view(["POST"])

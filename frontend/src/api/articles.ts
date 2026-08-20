@@ -1,4 +1,11 @@
-import type { ArticleRecord, Direction, DraftArticle, RenderedArticle } from '../types/article'
+import type {
+  ArticleRecord,
+  Direction,
+  DraftArticle,
+  ManualPrompt,
+  QualityReport,
+  RenderedArticle,
+} from '../types/article'
 import { getJson, postJson } from './http'
 
 export function generateArticleDirections(keywords: string) {
@@ -14,6 +21,22 @@ export function generateTemporaryArticleDraft(title: string, keywords: string) {
     title,
     keywords,
   })
+}
+
+export function generateManualPrompt(stage: string, context: Record<string, unknown>) {
+  return postJson<{ prompt: ManualPrompt }>('/articles/manual-prompt/', { stage, context })
+}
+
+export function importDraftFromPaste(title: string, keywords: string, pastedText: string) {
+  return postJson<{ draft: DraftArticle; rendered: RenderedArticle; saved: boolean }>('/articles/import-draft/', {
+    title,
+    keywords,
+    pasted_text: pastedText,
+  })
+}
+
+export function checkDraftQuality(draft: DraftArticle) {
+  return postJson<{ report: QualityReport; saved: boolean }>('/articles/quality-check/', { draft })
 }
 
 export function saveArticleToLibrary(draft: DraftArticle, keywords: string) {

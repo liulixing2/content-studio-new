@@ -12,6 +12,10 @@
 - 临时预览。
 - 用户手动保存到作品库。
 - 文章版本初始记录。
+- 手动 DeepSeek Prompt 生成。
+- DeepSeek 返回正文粘贴导入。
+- 本地发布前质检。
+- 未保存临时结果离开页面提示。
 
 未实现：
 
@@ -47,7 +51,9 @@ frontend/
     components/                 # 页面局部组件
       DirectionPanel.vue        # 关键词和方向
       TitlePanel.vue            # 标题和生成草稿
+      ManualAiPanel.vue         # 手动 DeepSeek Prompt 和粘贴导入
       DraftPreview.vue          # 临时草稿预览
+      QualityPanel.vue          # 发布前质检
       ArticleLibrary.vue        # 已保存作品库
   src/styles.css                # 页面样式
 
@@ -69,7 +75,11 @@ docs/
   ↓
 生成标题
   ↓
-生成临时草稿
+生成临时草稿 / 生成手动 DeepSeek Prompt
+  ↓
+粘贴 DeepSeek 返回内容并导入为临时草稿
+  ↓
+发布前质检
   ↓
 用户确认
   ↓
@@ -108,6 +118,9 @@ docs/
 - `generateArticleDirections`
 - `generateArticleTitles`
 - `generateTemporaryArticleDraft`
+- `generateManualPrompt`
+- `importDraftFromPaste`
+- `checkDraftQuality`
 - `saveArticleToLibrary`
 - `render_article_template`
 
@@ -138,3 +151,18 @@ docs/
 - `quota_service.py`：限制单次点击和自动修稿次数。
 
 所有真实 AI 调用都必须由前端按钮触发，不能页面加载自动触发。
+
+## 临时结果规则
+
+以下结果默认只存在当前页面，刷新会丢失：
+
+- 方向结果。
+- 标题候选。
+- 手动 Prompt。
+- 粘贴导入后的草稿。
+- 发布检测报告。
+- mock 草稿。
+
+只有点击“保存到作品库”才写入 `Article` 和 `ArticleVersion`。
+
+页面会在有未保存临时结果时提示用户，避免误刷新丢稿。

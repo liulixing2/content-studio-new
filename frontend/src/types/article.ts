@@ -26,6 +26,27 @@ export interface RenderedArticle {
   text: string
 }
 
+export interface ManualPrompt {
+  stage: string
+  stage_name: string
+  prompt: string
+  saved: boolean
+  usage_note: string
+}
+
+export interface QualityIssue {
+  level: 'high' | 'medium' | 'low'
+  message: string
+}
+
+export interface QualityReport {
+  publishable: boolean
+  score: number
+  issues: QualityIssue[]
+  suggestions: string[]
+  saved: boolean
+}
+
 export interface ArticleRecord {
   id: number
   title: string

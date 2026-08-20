@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
+  checkDraftQuality,
   fetchSavedArticles,
   generateArticleDirections,
+  generateManualPrompt,
   generateArticleTitles,
   generateTemporaryArticleDraft,
+  importDraftFromPaste,
   saveArticleToLibrary,
 } from '../../api/articles'
-import type { ArticleRecord, Direction, DraftArticle, RenderedArticle } from '../../types/article'
+import type {
+  ArticleRecord,
+  Direction,
+  DraftArticle,
+  ManualPrompt,
+  QualityReport,
+  RenderedArticle,
+} from '../../types/article'
 import ArticleLibrary from './components/ArticleLibrary.vue'
 import DirectionPanel from './components/DirectionPanel.vue'
 import DraftPreview from './components/DraftPreview.vue'
+import ManualAiPanel from './components/ManualAiPanel.vue'
+import QualityPanel from './components/QualityPanel.vue'
 import TitlePanel from './components/TitlePanel.vue'
 
 const keywords = ref('90后 动漫 龙珠')
@@ -20,13 +32,19 @@ const selectedDirection = ref<Direction | null>(null)
 const selectedTitle = ref('')
 const draft = ref<DraftArticle | null>(null)
 const rendered = ref<RenderedArticle | null>(null)
+const manualPrompt = ref<ManualPrompt | null>(null)
+const pastedText = ref('')
+const qualityReport = ref<QualityReport | null>(null)
 const articles = ref<ArticleRecord[]>([])
 const statusText = ref('当前为本地 mock 流程，不会自动调用 DeepSeek。')
 const isLoading = ref(false)
+const hasUnsavedTemporaryResult = ref(false)
 
 const canCreateTitles = computed(() => Boolean(selectedDirection.value))
 const canCreateDraft = computed(() => Boolean(selectedTitle.value))
 const canSaveDraft = computed(() => Boolean(draft.value))
+const canImportPastedDraft = computed(() => Boolean(selectedTitle.value && pastedText.value.trim()))
+const canCheckDraft = computed(() => Boolean(draft.value))
 
 async function runAction(action: () => Promise<void>, successText: string) {
   isLoading.value = true
@@ -40,7 +58,18 @@ async function runAction(action: () => Promise<void>, successText: string) {
   }
 }
 
+function confirmTemporaryOverwrite() {
+  if (!hasUnsavedTemporaryResult.value) return true
+  return window.confirm('当前有未保存的临时结果，继续会覆盖页面里的临时内容。是否继续？')
+}
+
+function markTemporaryChanged() {
+  hasUnsavedTemporaryResult.value = true
+  qualityReport.value = null
+}
+
 async function loadDirections() {
+  if (!confirmTemporaryOverwrite()) return
   await runAction(async () => {
     const result = await generateArticleDirections(keywords.value)
     directions.value = result.directions
@@ -49,34 +78,84 @@ async function loadDirections() {
     selectedTitle.value = ''
     draft.value = null
     rendered.value = null
+    manualPrompt.value = null
+    pastedText.value = ''
+    qualityReport.value = null
+    hasUnsavedTemporaryResult.value = true
   }, '已生成选题方向。')
 }
 
 async function loadTitles() {
   if (!selectedDirection.value) return
+  if (!confirmTemporaryOverwrite()) return
   await runAction(async () => {
     const result = await generateArticleTitles(selectedDirection.value as Direction)
     titles.value = result.titles
     selectedTitle.value = result.titles[0] ?? ''
     draft.value = null
     rendered.value = null
+    qualityReport.value = null
+    hasUnsavedTemporaryResult.value = true
   }, '已生成标题候选。')
 }
 
 async function loadDraft() {
   if (!selectedTitle.value) return
+  if (!confirmTemporaryOverwrite()) return
   await runAction(async () => {
     const result = await generateTemporaryArticleDraft(selectedTitle.value, keywords.value)
     draft.value = result.draft
     rendered.value = result.rendered
+    markTemporaryChanged()
   }, '已生成临时草稿，刷新前请确认是否保存。')
+}
+
+async function buildPrompt(stage: string) {
+  await runAction(async () => {
+    const result = await generateManualPrompt(stage, {
+      keywords: keywords.value,
+      title: selectedTitle.value,
+      direction: selectedDirection.value,
+      draft_text: rendered.value?.text ?? '',
+    })
+    manualPrompt.value = result.prompt
+    hasUnsavedTemporaryResult.value = true
+  }, '已生成手动 DeepSeek Prompt。')
+}
+
+async function copyPrompt() {
+  if (!manualPrompt.value) return
+  await navigator.clipboard.writeText(manualPrompt.value.prompt)
+  statusText.value = 'Prompt 已复制。'
+}
+
+async function importPastedDraft() {
+  if (!selectedTitle.value || !pastedText.value.trim()) return
+  if (!confirmTemporaryOverwrite()) return
+  await runAction(async () => {
+    const result = await importDraftFromPaste(selectedTitle.value, keywords.value, pastedText.value)
+    draft.value = result.draft
+    rendered.value = result.rendered
+    markTemporaryChanged()
+  }, '已导入为临时草稿，尚未保存。')
+}
+
+async function checkCurrentDraft() {
+  if (!draft.value) return
+  await runAction(async () => {
+    const result = await checkDraftQuality(draft.value as DraftArticle)
+    qualityReport.value = result.report
+    hasUnsavedTemporaryResult.value = true
+  }, '已完成发布检测。')
 }
 
 async function saveDraft() {
   if (!draft.value) return
+  if (!window.confirm('确认保存当前草稿到作品库？保存后会生成文章记录和版本记录。')) return
   await runAction(async () => {
     await saveArticleToLibrary(draft.value as DraftArticle, keywords.value)
     await loadLibrary()
+    hasUnsavedTemporaryResult.value = false
   }, '已保存到作品库。')
 }
 
@@ -85,7 +164,20 @@ async function loadLibrary() {
   articles.value = result.articles
 }
 
-onMounted(loadLibrary)
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+  if (!hasUnsavedTemporaryResult.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onMounted(() => {
+  loadLibrary()
+  window.addEventListener('beforeunload', warnBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', warnBeforeUnload)
+})
 </script>
 
 <template>
@@ -126,6 +218,17 @@ onMounted(loadLibrary)
           @generate-draft="loadDraft"
         />
 
+        <ManualAiPanel
+          v-model:pasted-text="pastedText"
+          :prompt="manualPrompt"
+          :can-import="canImportPastedDraft"
+          :can-build-from-draft="canCheckDraft"
+          :is-loading="isLoading"
+          @generate-prompt="buildPrompt"
+          @copy-prompt="copyPrompt"
+          @import-draft="importPastedDraft"
+        />
+
         <DraftPreview
           :draft="draft"
           :rendered="rendered"
@@ -133,6 +236,8 @@ onMounted(loadLibrary)
           :is-loading="isLoading"
           @save="saveDraft"
         />
+
+        <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
 
         <ArticleLibrary :articles="articles" @refresh="loadLibrary" />
       </section>
