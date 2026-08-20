@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -6,6 +7,8 @@ from rest_framework.response import Response
 from .models import Article, ArticleVersion
 from .serializers import ArticleSerializer
 from .services import (
+    build_article_docx,
+    build_directions_from_manual_hotspots,
     build_manual_prompt,
     check_article_quality,
     import_pasted_article,
@@ -20,6 +23,14 @@ from .services import (
 def generate_directions(request):
     keywords = request.data.get("keywords", "")
     return Response({"mode": "mock", "directions": mock_directions(keywords)})
+
+
+@api_view(["POST"])
+def generate_manual_hotspot_directions(request):
+    keywords = request.data.get("keywords", "")
+    pasted_text = request.data.get("pasted_text", "")
+    result = build_directions_from_manual_hotspots(keywords, pasted_text)
+    return Response(result)
 
 
 @api_view(["POST"])
@@ -67,6 +78,24 @@ def render_template(request):
     return Response({"rendered": render_article_template(body)})
 
 
+def _docx_response(filename, docx_bytes):
+    response = HttpResponse(
+        docx_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+    response["Content-Disposition"] = 'attachment; filename="%s"' % filename
+    return response
+
+
+@api_view(["POST"])
+def export_draft_word(request):
+    body = request.data.get("draft") or {}
+    if not body.get("title"):
+        return Response({"ok": False, "error": "缺少文章标题，不能导出 Word。"}, status=400)
+    docx_bytes = build_article_docx(body)
+    return _docx_response("wechat-draft.docx", docx_bytes)
+
+
 @api_view(["GET"])
 def list_articles(_request):
     queryset = Article.objects.all()[:50]
@@ -77,6 +106,13 @@ def list_articles(_request):
 def article_detail(_request, pk):
     article = get_object_or_404(Article, pk=pk)
     return Response({"article": ArticleSerializer(article).data})
+
+
+@api_view(["GET"])
+def export_article_word(_request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    docx_bytes = build_article_docx(article.body_json)
+    return _docx_response("wechat-article-%s.docx" % article.pk, docx_bytes)
 
 
 @api_view(["POST"])

@@ -10,14 +10,18 @@ defineProps<{
 
 defineEmits<{
   save: []
+  exportWord: []
 }>()
 </script>
 
 <template>
   <section class="panel preview-panel">
     <div class="preview-head">
-      <h3>3. 临时预览</h3>
-      <button type="button" :disabled="isLoading || !canSave" @click="$emit('save')">保存到作品库</button>
+      <h3>5. 临时预览</h3>
+      <div class="button-row compact">
+        <button type="button" :disabled="isLoading || !canSave" @click="$emit('exportWord')">导出 Word</button>
+        <button type="button" :disabled="isLoading || !canSave" @click="$emit('save')">保存到作品库</button>
+      </div>
     </div>
 
     <p v-if="!draft" class="empty">草稿生成后会显示在这里。未保存前刷新会丢失。</p>

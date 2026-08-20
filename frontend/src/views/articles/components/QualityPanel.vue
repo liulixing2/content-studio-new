@@ -15,7 +15,7 @@ defineEmits<{
 <template>
   <section class="panel quality-panel">
     <div class="preview-head">
-      <h3>5. 发布检测</h3>
+      <h3>6. 发布检测</h3>
       <button type="button" :disabled="isLoading || !canCheck" @click="$emit('check')">检测当前草稿</button>
     </div>
 

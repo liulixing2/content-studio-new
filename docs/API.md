@@ -46,6 +46,34 @@ POST /api/articles/directions/
 }
 ```
 
+## 手动热点整理为方向
+
+```http
+POST /api/articles/manual-hotspots/
+```
+
+请求：
+
+```json
+{
+  "keywords": "90后 动漫 龙珠",
+  "pasted_text": "从百度、微博、B站手动复制回来的热词或标题"
+}
+```
+
+返回：
+
+```json
+{
+  "directions": [],
+  "saved": false,
+  "source": "manual_paste",
+  "message": "手动粘贴内容已整理为临时方向，尚未保存。"
+}
+```
+
+注意：这是手动粘贴整理，不是自动抓取，不保存。
+
 ## 生成标题
 
 ```http
@@ -102,6 +130,24 @@ POST /api/articles/draft/
 ```
 
 注意：此接口不保存数据。
+
+## 导出临时草稿 Word
+
+```http
+POST /api/articles/draft/export-word/
+```
+
+请求：
+
+```json
+{
+  "draft": {}
+}
+```
+
+返回：`.docx` 文件流。
+
+注意：导出 Word 不保存文章。
 
 ## 生成手动 DeepSeek Prompt
 
@@ -273,6 +319,14 @@ GET /api/articles/
 GET /api/articles/{id}/
 ```
 
+## 导出已保存文章 Word
+
+```http
+GET /api/articles/{id}/export-word/
+```
+
+返回：`.docx` 文件流。
+
 ## 当前接口约束
 
 - 当前接口全部是 mock 或本地数据库操作。
@@ -280,3 +334,4 @@ GET /api/articles/{id}/
 - 不抓取百度、微博、B站。
 - 草稿接口不保存，保存接口才写库。
 - 手动 Prompt、粘贴导入、质检报告也都不保存。
+- 手动热点整理和 Word 导出也不保存。

@@ -1,13 +1,17 @@
 from .direction_service import mock_directions
 from .draft_service import mock_article
 from .keyword_service import split_keywords
+from .manual_hotspot_service import build_directions_from_manual_hotspots
 from .paste_import_service import import_pasted_article
 from .prompt_service import build_manual_prompt
 from .quality_service import check_article_quality
 from .template_service import render_article_template
 from .title_service import mock_titles
+from .word_export_service import build_article_docx
 
 __all__ = [
+    "build_article_docx",
+    "build_directions_from_manual_hotspots",
     "build_manual_prompt",
     "check_article_quality",
     "import_pasted_article",

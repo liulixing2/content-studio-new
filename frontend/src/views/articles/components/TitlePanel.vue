@@ -16,7 +16,7 @@ defineEmits<{
 
 <template>
   <section class="panel">
-    <h3>2. 标题与草稿</h3>
+    <h3>3. 标题与草稿</h3>
     <div class="actions">
       <button type="button" :disabled="isLoading || !canCreateTitles" @click="$emit('generateTitles')">
         生成标题

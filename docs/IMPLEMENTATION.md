@@ -16,6 +16,8 @@
 - DeepSeek 返回正文粘贴导入。
 - 本地发布前质检。
 - 未保存临时结果离开页面提示。
+- 手动热点粘贴整理。
+- 临时草稿和作品库文章导出 Word。
 
 未实现：
 
@@ -39,6 +41,8 @@ backend/
       direction_service.py      # 选题方向生成
       title_service.py          # 标题生成
       draft_service.py          # 草稿生成
+      manual_hotspot_service.py # 手动热点粘贴整理
+      word_export_service.py    # Word 文件导出
       template_service.py       # 公众号 HTML / Text 模板渲染
 
 frontend/
@@ -50,6 +54,7 @@ frontend/
     ArticleWorkspace.vue        # 公众号工作台主页面
     components/                 # 页面局部组件
       DirectionPanel.vue        # 关键词和方向
+      ManualHotspotPanel.vue    # 手动热点粘贴
       TitlePanel.vue            # 标题和生成草稿
       ManualAiPanel.vue         # 手动 DeepSeek Prompt 和粘贴导入
       DraftPreview.vue          # 临时草稿预览
@@ -72,6 +77,8 @@ docs/
 
 ```text
 生成方向
+  ↓
+手动粘贴热点整理方向（可选）
   ↓
 生成标题
   ↓
@@ -116,11 +123,14 @@ docs/
 函数名尽量表达动作：
 
 - `generateArticleDirections`
+- `generateManualHotspotDirections`
 - `generateArticleTitles`
 - `generateTemporaryArticleDraft`
 - `generateManualPrompt`
 - `importDraftFromPaste`
 - `checkDraftQuality`
+- `exportDraftWord`
+- `exportSavedArticleWord`
 - `saveArticleToLibrary`
 - `render_article_template`
 
@@ -162,6 +172,7 @@ docs/
 - 粘贴导入后的草稿。
 - 发布检测报告。
 - mock 草稿。
+- Word 导出结果。
 
 只有点击“保存到作品库”才写入 `Article` 和 `ArticleVersion`。
 

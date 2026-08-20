@@ -145,6 +145,20 @@ textarea {
   margin: 12px 0 16px;
 }
 
+.button-row.compact {
+  margin: 0;
+}
+
+.button-row a {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
 .hint {
   color: #64748b;
   line-height: 1.6;
@@ -227,6 +241,13 @@ textarea {
 
 .library-item small {
   color: #64748b;
+}
+
+.library-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
 }
 
 .prompt-box {

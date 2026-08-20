@@ -6,10 +6,17 @@ import type {
   QualityReport,
   RenderedArticle,
 } from '../types/article'
-import { getJson, postJson } from './http'
+import { API_BASE, getJson, postJson } from './http'
 
 export function generateArticleDirections(keywords: string) {
   return postJson<{ mode: string; directions: Direction[] }>('/articles/directions/', { keywords })
+}
+
+export function generateManualHotspotDirections(keywords: string, pastedText: string) {
+  return postJson<{ directions: Direction[]; saved: boolean; source: string; message: string }>('/articles/manual-hotspots/', {
+    keywords,
+    pasted_text: pastedText,
+  })
 }
 
 export function generateArticleTitles(direction: Direction) {
@@ -45,4 +52,22 @@ export function saveArticleToLibrary(draft: DraftArticle, keywords: string) {
 
 export function fetchSavedArticles() {
   return getJson<{ articles: ArticleRecord[] }>('/articles/')
+}
+
+async function downloadWord(path: string, body?: unknown) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: body ? 'POST' : 'GET',
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!response.ok) throw new Error(await response.text())
+  return response.blob()
+}
+
+export function exportDraftWord(draft: DraftArticle) {
+  return downloadWord('/articles/draft/export-word/', { draft })
+}
+
+export function exportSavedArticleWord(articleId: number) {
+  return downloadWord(`/articles/${articleId}/export-word/`)
 }

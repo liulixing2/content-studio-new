@@ -1,4 +1,4 @@
-const API_BASE = 'http://127.0.0.1:8000/api'
+export const API_BASE = 'http://127.0.0.1:8000/api'
 
 async function requestJson<T>(path: string, options: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, options)

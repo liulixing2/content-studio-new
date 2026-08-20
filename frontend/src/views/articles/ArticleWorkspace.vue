@@ -2,9 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   checkDraftQuality,
+  exportDraftWord,
+  exportSavedArticleWord,
   fetchSavedArticles,
   generateArticleDirections,
   generateManualPrompt,
+  generateManualHotspotDirections,
   generateArticleTitles,
   generateTemporaryArticleDraft,
   importDraftFromPaste,
@@ -22,6 +25,7 @@ import ArticleLibrary from './components/ArticleLibrary.vue'
 import DirectionPanel from './components/DirectionPanel.vue'
 import DraftPreview from './components/DraftPreview.vue'
 import ManualAiPanel from './components/ManualAiPanel.vue'
+import ManualHotspotPanel from './components/ManualHotspotPanel.vue'
 import QualityPanel from './components/QualityPanel.vue'
 import TitlePanel from './components/TitlePanel.vue'
 
@@ -34,6 +38,7 @@ const draft = ref<DraftArticle | null>(null)
 const rendered = ref<RenderedArticle | null>(null)
 const manualPrompt = ref<ManualPrompt | null>(null)
 const pastedText = ref('')
+const manualHotspotText = ref('')
 const qualityReport = ref<QualityReport | null>(null)
 const articles = ref<ArticleRecord[]>([])
 const statusText = ref('当前为本地 mock 流程，不会自动调用 DeepSeek。')
@@ -45,6 +50,7 @@ const canCreateDraft = computed(() => Boolean(selectedTitle.value))
 const canSaveDraft = computed(() => Boolean(draft.value))
 const canImportPastedDraft = computed(() => Boolean(selectedTitle.value && pastedText.value.trim()))
 const canCheckDraft = computed(() => Boolean(draft.value))
+const canImportManualHotspots = computed(() => Boolean(keywords.value.trim() && manualHotspotText.value.trim()))
 
 async function runAction(action: () => Promise<void>, successText: string) {
   isLoading.value = true
@@ -97,6 +103,22 @@ async function loadTitles() {
     qualityReport.value = null
     hasUnsavedTemporaryResult.value = true
   }, '已生成标题候选。')
+}
+
+async function importManualHotspots() {
+  if (!canImportManualHotspots.value) return
+  if (!confirmTemporaryOverwrite()) return
+  await runAction(async () => {
+    const result = await generateManualHotspotDirections(keywords.value, manualHotspotText.value)
+    directions.value = result.directions
+    selectedDirection.value = result.directions[0] ?? null
+    titles.value = []
+    selectedTitle.value = ''
+    draft.value = null
+    rendered.value = null
+    qualityReport.value = null
+    hasUnsavedTemporaryResult.value = true
+  }, '已将手动粘贴热点整理为临时方向。')
 }
 
 async function loadDraft() {
@@ -159,6 +181,30 @@ async function saveDraft() {
   }, '已保存到作品库。')
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+async function exportCurrentDraftWord() {
+  if (!draft.value) return
+  await runAction(async () => {
+    const blob = await exportDraftWord(draft.value as DraftArticle)
+    downloadBlob(blob, 'wechat-draft.docx')
+  }, '已导出当前临时草稿 Word。')
+}
+
+async function exportSavedWord(articleId: number) {
+  await runAction(async () => {
+    const blob = await exportSavedArticleWord(articleId)
+    downloadBlob(blob, `wechat-article-${articleId}.docx`)
+  }, '已导出作品库文章 Word。')
+}
+
 async function loadLibrary() {
   const result = await fetchSavedArticles()
   articles.value = result.articles
@@ -208,6 +254,14 @@ onBeforeUnmount(() => {
           @generate="loadDirections"
         />
 
+        <ManualHotspotPanel
+          v-model:manual-hotspot-text="manualHotspotText"
+          :keywords="keywords"
+          :can-import="canImportManualHotspots"
+          :is-loading="isLoading"
+          @import-hotspots="importManualHotspots"
+        />
+
         <TitlePanel
           v-model:selected-title="selectedTitle"
           :titles="titles"
@@ -235,11 +289,12 @@ onBeforeUnmount(() => {
           :can-save="canSaveDraft"
           :is-loading="isLoading"
           @save="saveDraft"
+          @export-word="exportCurrentDraftWord"
         />
 
         <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
 
-        <ArticleLibrary :articles="articles" @refresh="loadLibrary" />
+        <ArticleLibrary :articles="articles" @refresh="loadLibrary" @export-word="exportSavedWord" />
       </section>
     </main>
   </div>
