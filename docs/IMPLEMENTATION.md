@@ -1,0 +1,140 @@
+# 公众号框架实现说明
+
+## 当前实现范围
+
+当前只实现公众号文章框架 MVP，不接真实 DeepSeek。
+
+已实现：
+
+- 后端 Django / DRF 骨架。
+- 前端 Vue3 / Vite 骨架。
+- 公众号 mock 流程。
+- 临时预览。
+- 用户手动保存到作品库。
+- 文章版本初始记录。
+
+未实现：
+
+- 真实 DeepSeek API。
+- 图片生成。
+- 富文本剪贴板。
+- 视频包。
+- 小说。
+
+## 目录说明
+
+```text
+backend/
+  content_studio_backend/       # Django 项目配置
+  apps/articles/                # 公众号文章模块
+    models.py                   # Article / ArticleVersion / AiTask
+    views.py                    # API 入口，只做请求编排
+    serializers.py              # DRF 序列化
+    services/                   # 业务服务拆分
+      keyword_service.py        # 关键词清洗
+      direction_service.py      # 选题方向生成
+      title_service.py          # 标题生成
+      draft_service.py          # 草稿生成
+      template_service.py       # 公众号 HTML / Text 模板渲染
+
+frontend/
+  src/App.vue                   # 挂载工作台入口
+  src/api/http.ts               # GET / POST / PUT / PATCH / DELETE 封装
+  src/api/articles.ts           # 公众号接口方法
+  src/types/article.ts          # 公众号相关类型
+  src/views/articles/           # 公众号页面
+    ArticleWorkspace.vue        # 公众号工作台主页面
+    components/                 # 页面局部组件
+      DirectionPanel.vue        # 关键词和方向
+      TitlePanel.vue            # 标题和生成草稿
+      DraftPreview.vue          # 临时草稿预览
+      ArticleLibrary.vue        # 已保存作品库
+  src/styles.css                # 页面样式
+
+scripts/
+  start_backend.bat             # 后端启动脚本
+  start_frontend.bat            # 前端启动脚本
+
+docs/
+  API.md                        # 接口说明
+  AI_CODE_REVIEW.md             # AI 生成代码审查说明
+```
+
+## 核心业务规则
+
+生成草稿不会保存。
+
+```text
+生成方向
+  ↓
+生成标题
+  ↓
+生成临时草稿
+  ↓
+用户确认
+  ↓
+保存到作品库
+```
+
+相关代码：
+
+- `backend/apps/articles/views.py`
+- `backend/apps/articles/services/`
+- `frontend/src/views/articles/ArticleWorkspace.vue`
+- `frontend/src/api/articles.ts`
+
+## 主要数据模型
+
+`Article`
+
+- 已保存文章。
+- 保存渲染后的 HTML / Text。
+- 保存结构化正文 JSON。
+
+`ArticleVersion`
+
+- 文章版本记录。
+- 第一版保存时自动生成 `version = 1`。
+
+`AiTask`
+
+- AI 调用记录占位表。
+- 当前 mock 阶段暂未实际写入。
+
+## 命名原则
+
+函数名尽量表达动作：
+
+- `generateArticleDirections`
+- `generateArticleTitles`
+- `generateTemporaryArticleDraft`
+- `saveArticleToLibrary`
+- `render_article_template`
+
+后续继续保持：看函数名能知道业务意图。
+
+## 当前前端工作台
+
+当前启用模块：
+
+- 公众号文章
+
+预留模块：
+
+- 视频包
+- 小说章节
+
+预留模块只显示入口，不实现业务，避免半成品功能误导使用。
+
+## 后续扩展接口边界
+
+接真实 DeepSeek 时，优先新增独立服务，不把 AI 调用写进 `views.py`。
+
+建议新增：
+
+- `ai_provider_service.py`：统一封装 DeepSeek 或手动 Prompt 模式。
+- `quality_service.py`：检测是否可发布。
+- `image_prompt_service.py`：根据文章生成配图提示词。
+- `quota_service.py`：限制单次点击和自动修稿次数。
+
+所有真实 AI 调用都必须由前端按钮触发，不能页面加载自动触发。

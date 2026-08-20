@@ -8,6 +8,12 @@ venv/
 .venv/
 env/
 
+# Node
+node_modules/
+dist/
+frontend/dist/
+frontend/.vite/
+
 # IDE
 .vscode/
 .idea/
@@ -20,10 +26,13 @@ __pycache__/
 .pytest_cache/
 
 # 生成的媒体/素材
+data/
+storage/
 media/
 generated/
 output/
 videos/
+backend/db.sqlite3
 *.mp4
 *.avi
 *.mov

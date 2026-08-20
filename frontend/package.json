@@ -1,0 +1,19 @@
+{
+  "name": "content-studio-new-frontend",
+  "private": true,
+  "version": "0.1.0-planning",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vue": "^3.4.0",
+    "vue-tsc": "^2.0.0"
+  },
+  "devDependencies": {}
+}
