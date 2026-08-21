@@ -49,7 +49,7 @@ const hasUnsavedTemporaryResult = ref(false)
 const canCreateTitles = computed(() => Boolean(selectedDirection.value))
 const canCreateDraft = computed(() => Boolean(selectedTitle.value))
 const canSaveDraft = computed(() => Boolean(draft.value))
-const canImportPastedDraft = computed(() => Boolean(selectedTitle.value && pastedText.value.trim()))
+const canImportPastedDraft = computed(() => Boolean(pastedText.value.trim()))
 const canCheckDraft = computed(() => Boolean(draft.value))
 const canImportManualHotspots = computed(() => Boolean(keywords.value.trim() && manualHotspotText.value.trim()))
 
@@ -171,13 +171,24 @@ async function copyDraftHtml() {
   }
 }
 
+function inferTitleFromPastedText(value: string) {
+  const firstUsefulLine = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith('摘要：') && !line.startsWith('摘要:'))
+  if (!firstUsefulLine) return '未命名公众号文章'
+  return firstUsefulLine.replace(/^标题[:：]\s*/, '').slice(0, 80)
+}
+
 async function importPastedDraft() {
-  if (!selectedTitle.value || !pastedText.value.trim()) return
+  if (!pastedText.value.trim()) return
   if (!confirmTemporaryOverwrite()) return
   await runAction(async () => {
-    const result = await importDraftFromPaste(selectedTitle.value, keywords.value, pastedText.value)
+    const draftTitle = selectedTitle.value || inferTitleFromPastedText(pastedText.value)
+    const result = await importDraftFromPaste(draftTitle, keywords.value, pastedText.value)
     draft.value = result.draft
     rendered.value = result.rendered
+    selectedTitle.value = result.draft.title
     markTemporaryChanged()
   }, '已导入为临时草稿，尚未保存。')
 }
