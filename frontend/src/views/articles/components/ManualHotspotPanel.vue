@@ -8,6 +8,7 @@ const props = defineProps<{
 const manualHotspotText = defineModel<string>('manualHotspotText', { required: true })
 
 defineEmits<{
+  generateDirectionPrompt: []
   importHotspots: []
 }>()
 
@@ -21,23 +22,32 @@ function searchUrl(platform: 'baidu' | 'weibo' | 'bilibili') {
 
 <template>
   <section class="panel manual-hotspot-panel">
-    <h3>2. 手动热点粘贴</h3>
-    <p class="hint">自动抓取不可用时，打开平台搜索，把热词、标题或评论切口复制回来整理成临时方向。</p>
+    <h3>2. 平台/DeepSeek 粘贴生成方向</h3>
+    <p class="hint">
+      可以从百度、微博、B站复制热点，也可以去 DeepSeek 生成可写方向后粘贴回来；这里仍然只是整理临时方向。
+    </p>
 
     <div class="button-row">
       <a :href="searchUrl('baidu')" target="_blank" rel="noreferrer">百度搜索</a>
       <a :href="searchUrl('weibo')" target="_blank" rel="noreferrer">微博搜索</a>
       <a :href="searchUrl('bilibili')" target="_blank" rel="noreferrer">B站搜索</a>
+      <button type="button" :disabled="isLoading || !keywords.trim()" @click="$emit('generateDirectionPrompt')">
+        生成 DeepSeek 方向 Prompt
+      </button>
     </div>
 
     <label>
-      平台复制内容
-      <textarea v-model="manualHotspotText" rows="6" placeholder="每行粘贴一个热词、标题、评论切口或讨论点"></textarea>
+      平台热点 / DeepSeek 方向
+      <textarea
+        v-model="manualHotspotText"
+        rows="6"
+        placeholder="每行粘贴一个热词、标题、评论切口，或 DeepSeek 返回的可写方向"
+      ></textarea>
     </label>
 
     <div class="actions">
       <button type="button" :disabled="isLoading || !canImport" @click="$emit('importHotspots')">
-        整理为临时方向
+        粘贴内容整理为方向
       </button>
     </div>
   </section>

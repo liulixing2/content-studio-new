@@ -306,6 +306,7 @@ onBeforeUnmount(() => {
           :keywords="keywords"
           :can-import="canImportManualHotspots"
           :is-loading="isLoading"
+          @generate-direction-prompt="buildPrompt('hotspots')"
           @import-hotspots="importManualHotspots"
         />
 

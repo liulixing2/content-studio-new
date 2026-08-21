@@ -134,11 +134,11 @@ function clearKeywordConfig() {
 
     <div class="actions">
       <button type="button" :disabled="isLoading || !keywords.trim()" @click="$emit('generate')">
-        本地生成方向
+        本地生成方向（不调用 DeepSeek）
       </button>
     </div>
 
-    <p v-if="!directions.length" class="empty">输入关键词后生成可写方向。</p>
+    <p v-if="!directions.length" class="empty">输入关键词后，可以本地生成方向，也可以在右侧粘贴 DeepSeek 生成的方向。</p>
     <button
       v-for="direction in directions"
       :key="direction.title"
