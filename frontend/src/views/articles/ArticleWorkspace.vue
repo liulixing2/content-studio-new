@@ -197,7 +197,7 @@ async function importPastedDraft() {
     rendered.value = result.rendered
     selectedTitle.value = result.draft.title
     markTemporaryChanged()
-  }, '已导入为临时草稿，尚未保存。')
+  }, '已导入并套用公众号模板，尚未保存。')
 }
 
 async function checkCurrentDraft() {

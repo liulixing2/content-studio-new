@@ -34,9 +34,12 @@ def check_article_quality(article):
         issues.append({"level": "medium", "message": "摘要偏弱，不能快速说明文章价值。"})
         suggestions.append("摘要建议用 1 句话说明对象、角度和读者收益。")
 
-    if len(sections) < 3:
+    if len(sections) < 2:
         issues.append({"level": "high", "message": "正文段落层次不足，容易像半成品。"})
-        suggestions.append("正文至少拆成开头、主体分析、结尾互动 3 个层次。")
+        suggestions.append("正文至少拆成开头和主体两个层次，结尾可以放在互动引导里。")
+    elif len(sections) == 2:
+        issues.append({"level": "low", "message": "正文层次偏短，如果是长文建议再增加一个展开段。"})
+        suggestions.append("短文可以发布；如果要做深度稿，建议增加一个转折或观点段。")
 
     for phrase in TEMPLATE_PHRASES:
         if phrase in full_text:
@@ -56,7 +59,7 @@ def check_article_quality(article):
         suggestions.append("发布前补充配图来源和授权说明。")
 
     high_count = len([issue for issue in issues if issue["level"] == "high"])
-    publishable = high_count == 0 and len(sections) >= 3
+    publishable = high_count == 0 and len(sections) >= 2
 
     return {
         "publishable": publishable,

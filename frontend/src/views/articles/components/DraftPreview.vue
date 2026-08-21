@@ -28,7 +28,7 @@ defineEmits<{
       </div>
     </div>
 
-    <p v-if="!draft" class="empty">草稿生成后会显示在这里。未保存前刷新会丢失。</p>
+    <p v-if="!draft" class="empty">粘贴正文导入后，会自动套公众号模板显示在这里。未保存前刷新会丢失。</p>
     <div v-else>
       <div class="article-preview" v-html="rendered?.html"></div>
       <h4>复制用纯文本</h4>

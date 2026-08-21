@@ -138,7 +138,7 @@ function promptContext() {
       <textarea v-model="pastedText" rows="8" placeholder="把 DeepSeek 生成的公众号正文粘贴到这里；没选标题时会尝试用第一行作为标题"></textarea>
     </label>
     <div class="actions">
-      <button type="button" :disabled="isLoading || !canImport" @click="$emit('importDraft')">导入为临时草稿</button>
+      <button type="button" :disabled="isLoading || !canImport" @click="$emit('importDraft')">导入并套公众号模板</button>
     </div>
   </section>
 </template>
