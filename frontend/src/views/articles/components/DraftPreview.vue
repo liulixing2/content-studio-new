@@ -9,6 +9,8 @@ defineProps<{
 }>()
 
 defineEmits<{
+  copyHtml: []
+  copyText: []
   save: []
   exportWord: []
 }>()
@@ -19,6 +21,8 @@ defineEmits<{
     <div class="preview-head">
       <h3>5. 临时预览</h3>
       <div class="button-row compact">
+        <button type="button" :disabled="isLoading || !canSave" @click="$emit('copyHtml')">复制富文本</button>
+        <button type="button" :disabled="isLoading || !canSave" @click="$emit('copyText')">复制纯文本</button>
         <button type="button" :disabled="isLoading || !canSave" @click="$emit('exportWord')">导出 Word</button>
         <button type="button" :disabled="isLoading || !canSave" @click="$emit('save')">保存到作品库</button>
       </div>

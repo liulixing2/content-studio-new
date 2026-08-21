@@ -18,6 +18,15 @@ from .services import (
     render_article_template,
 )
 
+MAX_ARTICLE_COUNT = 20
+
+
+def trim_article_library(max_count=MAX_ARTICLE_COUNT):
+    old_ids = list(Article.objects.order_by("-updated_at").values_list("id", flat=True)[max_count:])
+    if old_ids:
+        Article.objects.filter(id__in=old_ids).delete()
+    return len(old_ids)
+
 
 @api_view(["POST"])
 def generate_directions(request):
@@ -98,13 +107,16 @@ def export_draft_word(request):
 
 @api_view(["GET"])
 def list_articles(_request):
-    queryset = Article.objects.all()[:50]
-    return Response({"articles": ArticleSerializer(queryset, many=True).data})
+    queryset = Article.objects.all()[:MAX_ARTICLE_COUNT]
+    return Response({"articles": ArticleSerializer(queryset, many=True).data, "limit": MAX_ARTICLE_COUNT})
 
 
-@api_view(["GET"])
+@api_view(["GET", "DELETE"])
 def article_detail(_request, pk):
     article = get_object_or_404(Article, pk=pk)
+    if _request.method == "DELETE":
+        article.delete()
+        return Response({"ok": True, "deleted_id": pk})
     return Response({"article": ArticleSerializer(article).data})
 
 
@@ -138,4 +150,5 @@ def save_article(request):
             rendered_text=rendered["text"],
             note="初次保存",
         )
-    return Response({"ok": True, "article": ArticleSerializer(article).data})
+        removed_count = trim_article_library()
+    return Response({"ok": True, "article": ArticleSerializer(article).data, "limit": MAX_ARTICLE_COUNT, "removed_count": removed_count})

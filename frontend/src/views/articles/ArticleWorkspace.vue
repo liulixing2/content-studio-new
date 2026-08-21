@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   checkDraftQuality,
+  deleteSavedArticle,
   exportDraftWord,
   exportSavedArticleWord,
   fetchSavedArticles,
@@ -52,11 +53,11 @@ const canImportPastedDraft = computed(() => Boolean(selectedTitle.value && paste
 const canCheckDraft = computed(() => Boolean(draft.value))
 const canImportManualHotspots = computed(() => Boolean(keywords.value.trim() && manualHotspotText.value.trim()))
 
-async function runAction(action: () => Promise<void>, successText: string) {
+async function runAction(action: () => Promise<string | void>, successText: string) {
   isLoading.value = true
   try {
-    await action()
-    statusText.value = successText
+    const resultText = await action()
+    statusText.value = resultText || successText
   } catch (error) {
     statusText.value = error instanceof Error ? error.message : '操作失败，请检查后端是否已启动。'
   } finally {
@@ -151,6 +152,25 @@ async function copyPrompt() {
   statusText.value = 'Prompt 已复制。'
 }
 
+async function copyDraftText() {
+  if (!rendered.value) return
+  await navigator.clipboard.writeText(rendered.value.text)
+  statusText.value = '纯文本已复制。'
+}
+
+async function copyDraftHtml() {
+  if (!rendered.value) return
+  try {
+    const htmlBlob = new Blob([rendered.value.html], { type: 'text/html' })
+    const textBlob = new Blob([rendered.value.text], { type: 'text/plain' })
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })])
+    statusText.value = '富文本已复制，可粘贴到公众号编辑器测试。'
+  } catch {
+    await copyDraftText()
+    statusText.value = '当前浏览器不支持富文本复制，已复制纯文本。'
+  }
+}
+
 async function importPastedDraft() {
   if (!selectedTitle.value || !pastedText.value.trim()) return
   if (!confirmTemporaryOverwrite()) return
@@ -175,9 +195,12 @@ async function saveDraft() {
   if (!draft.value) return
   if (!window.confirm('确认保存当前草稿到作品库？保存后会生成文章记录和版本记录。')) return
   await runAction(async () => {
-    await saveArticleToLibrary(draft.value as DraftArticle, keywords.value)
+    const result = await saveArticleToLibrary(draft.value as DraftArticle, keywords.value)
     await loadLibrary()
     hasUnsavedTemporaryResult.value = false
+    if (result.removed_count > 0) {
+      return `已保存到作品库，并按 20 篇上限清理 ${result.removed_count} 篇最旧文章。`
+    }
   }, '已保存到作品库。')
 }
 
@@ -203,6 +226,14 @@ async function exportSavedWord(articleId: number) {
     const blob = await exportSavedArticleWord(articleId)
     downloadBlob(blob, `wechat-article-${articleId}.docx`)
   }, '已导出作品库文章 Word。')
+}
+
+async function deleteArticle(articleId: number) {
+  if (!window.confirm('确认删除这篇作品库文章？删除后不可恢复。')) return
+  await runAction(async () => {
+    await deleteSavedArticle(articleId)
+    await loadLibrary()
+  }, '已删除作品库文章。')
 }
 
 async function loadLibrary() {
@@ -288,13 +319,20 @@ onBeforeUnmount(() => {
           :rendered="rendered"
           :can-save="canSaveDraft"
           :is-loading="isLoading"
+          @copy-html="copyDraftHtml"
+          @copy-text="copyDraftText"
           @save="saveDraft"
           @export-word="exportCurrentDraftWord"
         />
 
         <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
 
-        <ArticleLibrary :articles="articles" @refresh="loadLibrary" @export-word="exportSavedWord" />
+        <ArticleLibrary
+          :articles="articles"
+          @refresh="loadLibrary"
+          @export-word="exportSavedWord"
+          @delete-article="deleteArticle"
+        />
       </section>
     </main>
   </div>

@@ -8,6 +8,7 @@ defineProps<{
 defineEmits<{
   refresh: []
   exportWord: [articleId: number]
+  deleteArticle: [articleId: number]
 }>()
 </script>
 
@@ -22,7 +23,10 @@ defineEmits<{
     <div v-for="article in articles" :key="article.id" class="library-item">
       <div class="library-row">
         <strong>{{ article.title }}</strong>
-        <button type="button" @click="$emit('exportWord', article.id)">导出 Word</button>
+        <div class="button-row compact">
+          <button type="button" @click="$emit('exportWord', article.id)">导出 Word</button>
+          <button type="button" @click="$emit('deleteArticle', article.id)">删除</button>
+        </div>
       </div>
       <span>{{ article.summary }}</span>
       <small>{{ article.updated_at }}</small>

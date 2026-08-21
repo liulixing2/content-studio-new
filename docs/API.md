@@ -293,11 +293,13 @@ POST /api/articles/save/
 ```json
 {
   "ok": true,
-  "article": {}
+  "article": {},
+  "limit": 20,
+  "removed_count": 0
 }
 ```
 
-注意：只有这个接口会写入作品库。
+注意：只有这个接口会写入作品库。保存后最多保留 20 篇，超过会清理最旧文章。
 
 ## 作品库列表
 
@@ -309,7 +311,8 @@ GET /api/articles/
 
 ```json
 {
-  "articles": []
+  "articles": [],
+  "limit": 20
 }
 ```
 
@@ -318,6 +321,23 @@ GET /api/articles/
 ```http
 GET /api/articles/{id}/
 ```
+
+## 删除文章
+
+```http
+DELETE /api/articles/{id}/
+```
+
+返回：
+
+```json
+{
+  "ok": true,
+  "deleted_id": 1
+}
+```
+
+注意：删除已保存文章会同时删除版本记录。
 
 ## 导出已保存文章 Word
 
@@ -335,3 +355,4 @@ GET /api/articles/{id}/export-word/
 - 草稿接口不保存，保存接口才写库。
 - 手动 Prompt、粘贴导入、质检报告也都不保存。
 - 手动热点整理和 Word 导出也不保存。
+- 作品库最多保留 20 篇文章。

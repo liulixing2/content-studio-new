@@ -6,7 +6,7 @@ import type {
   QualityReport,
   RenderedArticle,
 } from '../types/article'
-import { API_BASE, getJson, postJson } from './http'
+import { API_BASE, deleteJson, getJson, postJson } from './http'
 
 export function generateArticleDirections(keywords: string) {
   return postJson<{ mode: string; directions: Direction[] }>('/articles/directions/', { keywords })
@@ -47,11 +47,15 @@ export function checkDraftQuality(draft: DraftArticle) {
 }
 
 export function saveArticleToLibrary(draft: DraftArticle, keywords: string) {
-  return postJson<{ ok: boolean; article: ArticleRecord }>('/articles/save/', { draft, keywords })
+  return postJson<{ ok: boolean; article: ArticleRecord; limit: number; removed_count: number }>('/articles/save/', { draft, keywords })
 }
 
 export function fetchSavedArticles() {
-  return getJson<{ articles: ArticleRecord[] }>('/articles/')
+  return getJson<{ articles: ArticleRecord[]; limit: number }>('/articles/')
+}
+
+export function deleteSavedArticle(articleId: number) {
+  return deleteJson<{ ok: boolean; deleted_id: number }>(`/articles/${articleId}/`)
 }
 
 async function downloadWord(path: string, body?: unknown) {
