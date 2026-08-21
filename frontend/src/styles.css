@@ -114,16 +114,13 @@ button:disabled {
 }
 
 .article-workbench {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 18px;
-  align-items: start;
+  display: block;
 }
 
-.article-main,
-.toolbox {
+.article-main {
   display: grid;
   gap: 18px;
+  max-width: 1120px;
 }
 
 .toolbox {
@@ -481,12 +478,44 @@ select:focus {
   gap: 8px;
 }
 
+.prompt-toolbar button {
+  min-width: 86px;
+  background: #ffffff;
+}
+
 .prompt-editor {
   min-height: 430px;
   font-family: Consolas, "Microsoft YaHei", monospace;
   line-height: 1.65;
   border-color: #bfdbfe;
   background: #ffffff;
+}
+
+.secondary-tools {
+  padding: 0;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.secondary-tools summary {
+  padding: 14px 16px;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.secondary-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 0 14px 14px;
+}
+
+.secondary-tools-grid .panel,
+.secondary-tools-grid .saved {
+  grid-column: auto;
+  box-shadow: none;
 }
 
 .choice-row {
@@ -549,5 +578,9 @@ pre {
 
   .state-stack {
     text-align: left;
+  }
+
+  .secondary-tools-grid {
+    grid-template-columns: 1fr;
   }
 }

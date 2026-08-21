@@ -197,12 +197,12 @@ onMounted(() => {
       </div>
 
       <div class="prompt-toolbar">
+        <button type="button" @click="insertRules">基础规则</button>
         <button type="button" @click="insertDirection">方向/分类</button>
         <button type="button" @click="insertTitle">标题</button>
-        <button type="button" @click="insertHotwords">补充要求</button>
+        <button type="button" @click="insertHotwords">热词</button>
         <button type="button" @click="insertOutline">大纲</button>
         <button type="button" @click="insertTemplate">模板</button>
-        <button type="button" @click="insertRules">硬性要求</button>
       </div>
 
       <label>

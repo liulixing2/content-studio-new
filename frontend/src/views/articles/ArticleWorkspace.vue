@@ -287,14 +287,16 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
-          <TitlePanel
-            v-model:selected-title="selectedTitle"
-            :titles="titles"
-            :can-create-titles="canCreateTitles"
-            :can-create-draft="canCreateDraft"
+          <ManualAiPanel
+            v-model:pasted-text="pastedText"
+            v-model:manual-hotspot-text="manualHotspotText"
+            :keywords="keywords"
+            :selected-direction="selectedDirection"
+            :selected-title="selectedTitle"
+            :can-import="canImportPastedDraft"
             :is-loading="isLoading"
-            @generate-titles="loadTitles"
-            @generate-draft="loadDraft"
+            @copy-prompt="copyPrompt"
+            @import-draft="importPastedDraft"
           />
 
           <DraftPreview
@@ -309,37 +311,38 @@ onBeforeUnmount(() => {
           />
 
           <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
+
+          <details class="secondary-tools">
+            <summary>辅助设置 / 作品库</summary>
+            <div class="secondary-tools-grid">
+              <DirectionPanel
+                v-model:keywords="keywords"
+                v-model:selected-direction="selectedDirection"
+                :directions="directions"
+                :is-loading="isLoading"
+                @generate="loadDirections"
+              />
+
+              <TitlePanel
+                v-model:selected-title="selectedTitle"
+                :titles="titles"
+                :can-create-titles="canCreateTitles"
+                :can-create-draft="canCreateDraft"
+                :is-loading="isLoading"
+                @generate-titles="loadTitles"
+                @generate-draft="loadDraft"
+              />
+
+              <ArticleLibrary
+                :articles="articles"
+                @open-article="openSavedArticle"
+                @refresh="loadLibrary"
+                @export-word="exportSavedWord"
+                @delete-article="deleteArticle"
+              />
+            </div>
+          </details>
         </main>
-
-        <aside class="toolbox">
-          <DirectionPanel
-            v-model:keywords="keywords"
-            v-model:selected-direction="selectedDirection"
-            :directions="directions"
-            :is-loading="isLoading"
-            @generate="loadDirections"
-          />
-
-          <ManualAiPanel
-            v-model:pasted-text="pastedText"
-            v-model:manual-hotspot-text="manualHotspotText"
-            :keywords="keywords"
-            :selected-direction="selectedDirection"
-            :selected-title="selectedTitle"
-            :can-import="canImportPastedDraft"
-            :is-loading="isLoading"
-            @copy-prompt="copyPrompt"
-            @import-draft="importPastedDraft"
-          />
-
-          <ArticleLibrary
-            :articles="articles"
-            @open-article="openSavedArticle"
-            @refresh="loadLibrary"
-            @export-word="exportSavedWord"
-            @delete-article="deleteArticle"
-          />
-        </aside>
       </section>
     </main>
   </div>
