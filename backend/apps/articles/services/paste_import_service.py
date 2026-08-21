@@ -2,7 +2,10 @@ import re
 
 
 HEADING_PATTERN = re.compile(r"^(#{1,3}\s*)?(([一二三四五六七八九十]+|[0-9]+)[、.．、]\s*)?(.{2,48})$")
-LABEL_PATTERN = re.compile(r"^(标题|摘要|导语|互动引导|互动|评论引导|素材说明|图片说明|版权提示|版权说明|参考来源)[:：]\s*(.*)$")
+MARKER_ONLY_PATTERN = re.compile(r"^([一二三四五六七八九十]+|[0-9]+)[、.．、]\s*$")
+LABEL_PATTERN = re.compile(r"^(标题|摘要|导语|互动话题|互动引导|互动|评论引导|素材说明|图片说明|版权提示|版权说明|参考来源)[:：]\s*(.*)$")
+CHINESE_NUMBERS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+DEFAULT_HEADING_TAILS = ["具体场景", "核心观点", "重看理解", "读者互动"]
 
 
 def _clean_line(value):
@@ -22,9 +25,38 @@ def _is_heading(line):
     return False
 
 
-def _strip_heading_marker(line):
+def _strip_heading_marker(line, index=0):
     text = line.lstrip("#").strip()
+    marker_match = MARKER_ONLY_PATTERN.match(text)
+    if marker_match:
+        marker = CHINESE_NUMBERS[index] if index < len(CHINESE_NUMBERS) else str(index + 1)
+        tail = DEFAULT_HEADING_TAILS[index] if index < len(DEFAULT_HEADING_TAILS) else "正文"
+        return "%s、%s" % (marker, tail)
     return text
+
+
+def _renumber_heading(heading, index):
+    marker = CHINESE_NUMBERS[index] if index < len(CHINESE_NUMBERS) else str(index + 1)
+    clean = re.sub(r"^(#{1,3}\s*)?(([一二三四五六七八九十]+|[0-9]+)[、.．、]\s*)", "", str(heading or "")).strip()
+    if not clean:
+        clean = DEFAULT_HEADING_TAILS[index] if index < len(DEFAULT_HEADING_TAILS) else "正文"
+    return "%s、%s" % (marker, clean)
+
+
+def _renumber_sections(sections):
+    cleaned = []
+    for section in sections:
+        paragraphs = [paragraph for paragraph in section.get("paragraphs", []) if paragraph]
+        if not paragraphs:
+            continue
+        cleaned.append(
+            {
+                "heading": _renumber_heading(section.get("heading"), len(cleaned)),
+                "paragraphs": paragraphs,
+                "image_hint": section.get("image_hint", ""),
+            }
+        )
+    return cleaned
 
 
 def _fallback_sections(paragraphs):
@@ -38,7 +70,7 @@ def _fallback_sections(paragraphs):
         first = max(1, len(paragraphs) // 3)
         second = max(first + 1, (len(paragraphs) * 2) // 3)
         groups = [paragraphs[:first], paragraphs[first:second], paragraphs[second:]]
-        headings = ["一、开头切入", "二、正文展开", "三、结尾收束"]
+        headings = ["一、具体场景", "二、核心观点", "三、读者互动"]
 
     sections = []
     for heading, group in zip(headings, groups):
@@ -68,7 +100,7 @@ def import_pasted_article(title, pasted_text, keywords):
                 detected_title = value
             elif label in ["摘要", "导语"] and value:
                 summary = value
-            elif label in ["互动引导", "互动", "评论引导"] and value:
+            elif label in ["互动话题", "互动引导", "互动", "评论引导"] and value:
                 interaction = value
             elif value:
                 copyright_notes.append(value if label in ["素材说明", "图片说明"] else "%s：%s" % (label, value))
@@ -85,7 +117,7 @@ def import_pasted_article(title, pasted_text, keywords):
             if current_section:
                 sections.append(current_section)
             current_section = {
-                "heading": _strip_heading_marker(line),
+                "heading": _strip_heading_marker(line, len(sections)),
                 "paragraphs": [],
                 "image_hint": "",
             }
@@ -98,24 +130,17 @@ def import_pasted_article(title, pasted_text, keywords):
 
     if leading_paragraphs:
         if sections or current_section:
-            sections.insert(0, {"heading": "一、开头切入", "paragraphs": leading_paragraphs, "image_hint": ""})
+            sections.insert(0, {"heading": "一、具体场景", "paragraphs": leading_paragraphs, "image_hint": ""})
         else:
             sections.extend(_fallback_sections(leading_paragraphs))
 
     if current_section:
         sections.append(current_section)
 
+    sections = _renumber_sections(sections)
+
     if not summary:
         summary = sections[0]["paragraphs"][0][:120] if sections and sections[0]["paragraphs"] else ""
-
-    if not interaction:
-        interaction = "你对这个话题怎么看？欢迎在评论区聊聊。"
-
-    if not copyright_notes:
-        copyright_notes = [
-            "正文为用户粘贴导入的临时内容，保存前请人工确认事实和版权。",
-            "配图默认使用原创生成图或自有授权素材。",
-        ]
 
     return {
         "title": title or detected_title or "未命名公众号文章",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import type { Direction } from '../../../types/article'
 
 const props = defineProps<{
@@ -14,6 +14,8 @@ const pastedText = defineModel<string>('pastedText', { required: true })
 const manualHotspotText = defineModel<string>('manualHotspotText', { required: true })
 const selectedTemplate = ref('情绪共鸣文')
 const promptText = ref('')
+const titleText = ref('')
+const directionText = ref('')
 
 const templateOptions = [
   {
@@ -74,7 +76,7 @@ function currentTemplateLines() {
   return template.content
 }
 
-function directionLines() {
+function selectedDirectionLines() {
   const direction = props.selectedDirection
   return [
     `关键词：${props.keywords || '请在这里填写关键词'}`,
@@ -84,21 +86,44 @@ function directionLines() {
   ].filter(Boolean)
 }
 
+function syncPresetFields() {
+  if (!titleText.value.trim() && props.selectedTitle) {
+    titleText.value = props.selectedTitle
+  }
+  if (!directionText.value.trim()) {
+    directionText.value = selectedDirectionLines().join('\n')
+  }
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function appendBlock(title: string, lines: string[]) {
   const block = [`【${title}】`, ...lines].filter(Boolean).join('\n')
   promptText.value = [promptText.value.trim(), block].filter(Boolean).join('\n\n')
 }
 
+function upsertBlock(title: string, lines: string[]) {
+  const block = [`【${title}】`, ...lines].filter(Boolean).join('\n')
+  const pattern = new RegExp(`(^|\\n\\n)【${escapeRegExp(title)}】[\\s\\S]*?(?=\\n\\n【|$)`)
+  if (pattern.test(promptText.value)) {
+    promptText.value = promptText.value.replace(pattern, (_match, prefix) => `${prefix}${block}`)
+    return
+  }
+  appendBlock(title, lines)
+}
+
 function insertDirection() {
-  appendBlock('方向/分类', directionLines())
+  upsertBlock('方向/分类', [directionText.value || selectedDirectionLines().join('\n')])
 }
 
 function insertTitle() {
-  appendBlock('标题', [`${props.selectedTitle || '请在这里填写标题'}`])
+  upsertBlock('标题', [`标题：${titleText.value.trim()}`])
 }
 
 function insertHotwords() {
-  appendBlock('补充要求', [manualHotspotText.value || '请在这里填写想保留的热词、关键词、角度或禁用表达'])
+  upsertBlock('热词', [manualHotspotText.value || ''])
 }
 
 function outlineLines() {
@@ -112,11 +137,11 @@ function outlineLines() {
 }
 
 function insertOutline() {
-  appendBlock('大纲', outlineLines())
+  upsertBlock('大纲', outlineLines())
 }
 
 function insertTemplate() {
-  appendBlock('模板', currentTemplateLines())
+  upsertBlock('模板', currentTemplateLines())
 }
 
 function resetPrompt() {
@@ -126,9 +151,9 @@ function resetPrompt() {
 function ruleLines() {
   return [
     '1. 不要解释写作过程，不要输出 Markdown 代码块。',
-    '2. 小标题必须顺序编号，不能出现两个“一、”。',
+    '2. 小标题必须顺序编号，不能出现两个“一、”，并且编号后必须有具体小标题。',
     '3. 不要使用“开头切入”“正文展开”“结尾收束”这种模板小标题。',
-    '4. 正文最后只能有一个“互动话题”，不要再写“互动引导”。',
+    '4. 正文最后只能有一个“互动话题：”，不要再写“互动引导：”。',
     '5. 不要输出素材说明、版权说明、参考来源、配图建议。',
     '6. 不要编造平台、数据、链接、发布时间或引用。',
     '7. 每一节必须回应标题里的核心对象或核心问题。',
@@ -137,16 +162,17 @@ function ruleLines() {
 }
 
 function buildFullPrompt() {
+  syncPresetFields()
   promptText.value = [
     '请根据下面要求生成一篇可直接导入公众号编辑器的正文。',
     '',
     '【标题】',
-    props.selectedTitle || '请在这里输入标题',
+    `标题：${titleText.value.trim()}`,
     '',
     '【方向/分类】',
-    ...directionLines(),
+    directionText.value || selectedDirectionLines().join('\n'),
     '',
-    '【补充要求】',
+    '【热词】',
     manualHotspotText.value || '无',
     '',
     '【大纲】',
@@ -155,13 +181,16 @@ function buildFullPrompt() {
     '【模板】',
     ...currentTemplateLines(),
     '',
-    '输出格式必须严格包含：',
-    '标题：',
-    '摘要：',
-    '一、',
-    '二、',
-    '三、',
-    '互动话题：',
+    '输出格式示例：',
+    '标题：这里输出完整标题',
+    '摘要：这里输出一段摘要',
+    '一、这里必须是具体小标题',
+    '这里输出正文段落',
+    '二、这里必须是具体小标题',
+    '这里输出正文段落',
+    '三、这里必须是具体小标题',
+    '这里输出正文段落',
+    '互动话题：这里输出一个评论区问题',
     '',
     '硬性要求：',
     ...ruleLines(),
@@ -169,8 +198,16 @@ function buildFullPrompt() {
 }
 
 function insertRules() {
-  appendBlock('硬性要求', ruleLines())
+  upsertBlock('基础规则', ruleLines())
 }
+
+watch(
+  () => [props.selectedTitle, props.selectedDirection?.title, props.keywords],
+  () => {
+    syncPresetFields()
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   buildFullPrompt()
@@ -203,6 +240,18 @@ onMounted(() => {
         <button type="button" @click="insertHotwords">热词</button>
         <button type="button" @click="insertOutline">大纲</button>
         <button type="button" @click="insertTemplate">模板</button>
+      </div>
+
+      <div class="prompt-fields">
+        <label>
+          标题
+          <input v-model="titleText" placeholder="可以手动输入标题；也可以从辅助设置生成标题后同步" />
+        </label>
+
+        <label>
+          方向/分类
+          <textarea v-model="directionText" rows="4" placeholder="可以手动输入方向、分类、目标读者和写作角度"></textarea>
+        </label>
       </div>
 
       <label>

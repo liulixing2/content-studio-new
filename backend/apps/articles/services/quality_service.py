@@ -1,3 +1,6 @@
+import re
+
+
 TEMPLATE_PHRASES = [
     "标题讨论点、观看现场、重看后劲",
     "它的价值不只是“发生过”",
@@ -25,10 +28,19 @@ def check_article_quality(article):
         + [section.get("heading", "") for section in sections]
         + [paragraph for section in sections for paragraph in section.get("paragraphs", [])]
     )
+    compact_text = "".join(full_text.split())
 
     if len(title) < 8:
         issues.append({"level": "high", "message": "标题太短，缺少明确讨论点。"})
         suggestions.append("标题需要包含对象、矛盾或读者关心的问题。")
+
+    if len(compact_text) < 300:
+        issues.append({"level": "high", "message": "正文有效内容太短，不能直接发布。"})
+        suggestions.append("正文至少需要完整展开 2-3 个段落，不能只输入测试字符或占位内容。")
+
+    if re.search(r"(.)(\1{8,})", compact_text):
+        issues.append({"level": "high", "message": "检测到连续重复字符，像测试内容而不是正式文章。"})
+        suggestions.append("请粘贴完整正文后再检测。")
 
     if not summary or len(summary) < 30:
         issues.append({"level": "medium", "message": "摘要偏弱，不能快速说明文章价值。"})

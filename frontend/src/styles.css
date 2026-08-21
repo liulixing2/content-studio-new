@@ -483,6 +483,12 @@ select:focus {
   background: #ffffff;
 }
 
+.prompt-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 12px;
+}
+
 .prompt-editor {
   min-height: 430px;
   font-family: Consolas, "Microsoft YaHei", monospace;
@@ -581,6 +587,10 @@ pre {
   }
 
   .secondary-tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prompt-fields {
     grid-template-columns: 1fr;
   }
 }
