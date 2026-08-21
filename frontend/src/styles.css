@@ -318,6 +318,50 @@ input {
   color: #64748b;
 }
 
+.step-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.step-tab {
+  padding: 8px 12px;
+  color: #475569;
+}
+
+.step-tab.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.step-panel {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  background: #f8fafc;
+}
+
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.choice-row label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.choice-row input {
+  width: auto;
+  margin: 0;
+}
+
 .quality-result {
   padding: 10px 12px;
   background: #fff7ed;
