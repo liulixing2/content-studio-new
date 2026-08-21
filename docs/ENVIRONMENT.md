@@ -79,6 +79,7 @@ content_studio_new
 - `scripts/start_backend.bat`
 - `scripts/start_frontend.bat`
 - `scripts/start_all.bat`
+- `scripts/reset_local_data.bat`
 
 首次安装：
 
@@ -103,6 +104,14 @@ npm install
 
 - 后端：`http://127.0.0.1:8000`
 - 前端：`http://127.0.0.1:5173`
+
+清空本地测试数据：
+
+```bat
+scripts\reset_local_data.bat
+```
+
+脚本只删除 `data/content_studio.sqlite3`，并要求输入 `RESET` 确认。
 
 ## Git 注意事项
 

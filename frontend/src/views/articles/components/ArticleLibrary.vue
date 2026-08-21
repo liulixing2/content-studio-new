@@ -6,6 +6,7 @@ defineProps<{
 }>()
 
 defineEmits<{
+  openArticle: [article: ArticleRecord]
   refresh: []
   exportWord: [articleId: number]
   deleteArticle: [articleId: number]
@@ -24,6 +25,7 @@ defineEmits<{
       <div class="library-row">
         <strong>{{ article.title }}</strong>
         <div class="button-row compact">
+          <button type="button" @click="$emit('openArticle', article)">打开</button>
           <button type="button" @click="$emit('exportWord', article.id)">导出 Word</button>
           <button type="button" @click="$emit('deleteArticle', article.id)">删除</button>
         </div>

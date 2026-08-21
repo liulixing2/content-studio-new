@@ -236,6 +236,22 @@ async function deleteArticle(articleId: number) {
   }, '已删除作品库文章。')
 }
 
+async function openSavedArticle(article: ArticleRecord) {
+  if (!confirmTemporaryOverwrite()) return
+  draft.value = article.body_json
+  rendered.value = {
+    html: article.rendered_html,
+    text: article.rendered_text,
+  }
+  selectedTitle.value = article.title
+  keywords.value = article.keywords || keywords.value
+  qualityReport.value = null
+  manualPrompt.value = null
+  pastedText.value = ''
+  hasUnsavedTemporaryResult.value = true
+  statusText.value = '已打开作品库文章到临时预览区，可复制、导出或重新质检。'
+}
+
 async function loadLibrary() {
   const result = await fetchSavedArticles()
   articles.value = result.articles
@@ -329,6 +345,7 @@ onBeforeUnmount(() => {
 
         <ArticleLibrary
           :articles="articles"
+          @open-article="openSavedArticle"
           @refresh="loadLibrary"
           @export-word="exportSavedWord"
           @delete-article="deleteArticle"
