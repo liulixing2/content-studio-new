@@ -18,4 +18,4 @@ class AllowLocalhostCorsMiddleware:
         if origin in {"http://127.0.0.1:5173", "http://localhost:5173"}:
             response["Access-Control-Allow-Origin"] = origin
             response["Access-Control-Allow-Headers"] = "Content-Type"
-            response["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+            response["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
