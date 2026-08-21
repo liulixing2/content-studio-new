@@ -16,7 +16,7 @@
 
 后端：
 
-- Python
+- Python 3.12 推荐。不要使用当前机器默认的 Python 3.6。
 - Django
 - Django REST Framework
 
@@ -74,13 +74,22 @@ content_studio_new
 
 ## 本地运行方式目标
 
-后续应提供：
+已提供：
 
 - `scripts/start_backend.bat`
 - `scripts/start_frontend.bat`
 - `scripts/start_all.bat`
 
-用户使用方式：
+首次安装：
+
+```bat
+C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m venv backend\.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd frontend
+npm install
+```
+
+用户启动方式：
 
 ```text
 双击启动脚本
@@ -89,6 +98,11 @@ content_studio_new
   ↓
 使用项目
 ```
+
+本地地址：
+
+- 后端：`http://127.0.0.1:8000`
+- 前端：`http://127.0.0.1:5173`
 
 ## Git 注意事项
 

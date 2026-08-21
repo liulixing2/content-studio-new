@@ -4,6 +4,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
+LOCAL_DATA_DIR = PROJECT_ROOT / "data"
+LOCAL_DATA_DIR.mkdir(exist_ok=True)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "local-dev-only-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
@@ -53,7 +55,7 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": PROJECT_ROOT / "data" / "content_studio.sqlite3",
+        "NAME": LOCAL_DATA_DIR / "content_studio.sqlite3",
     }
 }
 

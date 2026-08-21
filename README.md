@@ -28,7 +28,16 @@
 
 ## 本地启动目标
 
-后续安装依赖后：
+首次安装依赖：
+
+```bat
+C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m venv backend\.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd frontend
+npm install
+```
+
+启动：
 
 ```bat
 scripts\start_backend.bat
