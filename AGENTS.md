@@ -69,6 +69,7 @@ git diff --check
 
 - Work on `dev` unless the user explicitly asks otherwise.
 - Important completed changes should be pushed to both remotes:
+- Remote pushes use SSH and sandboxed port 22 fails. For `git push github dev` and `git push gitee dev`, request escalated execution directly; do not first run a sandboxed push that is expected to fail.
 
 ```powershell
 git push github dev
