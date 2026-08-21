@@ -7,8 +7,6 @@ import {
   exportSavedArticleWord,
   fetchSavedArticles,
   generateArticleDirections,
-  generateManualPrompt,
-  generateManualHotspotDirections,
   generateArticleTitles,
   generateTemporaryArticleDraft,
   importDraftFromPaste,
@@ -18,7 +16,6 @@ import type {
   ArticleRecord,
   Direction,
   DraftArticle,
-  ManualPrompt,
   QualityReport,
   RenderedArticle,
 } from '../../types/article'
@@ -36,7 +33,6 @@ const selectedDirection = ref<Direction | null>(null)
 const selectedTitle = ref('')
 const draft = ref<DraftArticle | null>(null)
 const rendered = ref<RenderedArticle | null>(null)
-const manualPrompt = ref<ManualPrompt | null>(null)
 const pastedText = ref('')
 const manualHotspotText = ref('')
 const qualityReport = ref<QualityReport | null>(null)
@@ -50,7 +46,6 @@ const canCreateDraft = computed(() => Boolean(selectedTitle.value))
 const canSaveDraft = computed(() => Boolean(draft.value))
 const canImportPastedDraft = computed(() => Boolean(pastedText.value.trim()))
 const canCheckDraft = computed(() => Boolean(draft.value))
-const canImportManualHotspots = computed(() => Boolean(keywords.value.trim() && manualHotspotText.value.trim()))
 const currentArticleStatus = computed(() => {
   if (draft.value) return '临时稿已生成'
   if (selectedTitle.value) return '标题已选择'
@@ -91,7 +86,6 @@ async function loadDirections() {
     selectedTitle.value = ''
     draft.value = null
     rendered.value = null
-    manualPrompt.value = null
     pastedText.value = ''
     qualityReport.value = null
     hasUnsavedTemporaryResult.value = true
@@ -112,22 +106,6 @@ async function loadTitles() {
   }, '已生成标题候选。')
 }
 
-async function importManualHotspots() {
-  if (!canImportManualHotspots.value) return
-  if (!confirmTemporaryOverwrite()) return
-  await runAction(async () => {
-    const result = await generateManualHotspotDirections(keywords.value, manualHotspotText.value)
-    directions.value = result.directions
-    selectedDirection.value = result.directions[0] ?? null
-    titles.value = []
-    selectedTitle.value = ''
-    draft.value = null
-    rendered.value = null
-    qualityReport.value = null
-    hasUnsavedTemporaryResult.value = true
-  }, '已将手动粘贴热点整理为临时方向。')
-}
-
 async function loadDraft() {
   if (!selectedTitle.value) return
   if (!confirmTemporaryOverwrite()) return
@@ -139,23 +117,9 @@ async function loadDraft() {
   }, '已生成临时草稿，刷新前请确认是否保存。')
 }
 
-async function buildPrompt(stage: string, extraContext: Record<string, unknown> = {}) {
-  await runAction(async () => {
-    const result = await generateManualPrompt(stage, {
-      keywords: keywords.value,
-      title: selectedTitle.value,
-      direction: selectedDirection.value,
-      draft_text: rendered.value?.text ?? '',
-      ...extraContext,
-    })
-    manualPrompt.value = result.prompt
-    hasUnsavedTemporaryResult.value = true
-  }, '已生成手动 DeepSeek Prompt。')
-}
-
-async function copyPrompt() {
-  if (!manualPrompt.value) return
-  await navigator.clipboard.writeText(manualPrompt.value.prompt)
+async function copyPrompt(promptText: string) {
+  if (!promptText.trim()) return
+  await navigator.clipboard.writeText(promptText)
   statusText.value = 'Prompt 已复制。'
 }
 
@@ -264,7 +228,6 @@ async function openSavedArticle(article: ArticleRecord) {
   selectedTitle.value = article.title
   keywords.value = article.keywords || keywords.value
   qualityReport.value = null
-  manualPrompt.value = null
   pastedText.value = ''
   hasUnsavedTemporaryResult.value = true
   statusText.value = '已打开作品库文章到临时预览区，可复制、导出或重新质检。'
@@ -361,15 +324,12 @@ onBeforeUnmount(() => {
             v-model:pasted-text="pastedText"
             v-model:manual-hotspot-text="manualHotspotText"
             :keywords="keywords"
-            :prompt="manualPrompt"
+            :selected-direction="selectedDirection"
+            :selected-title="selectedTitle"
             :can-import="canImportPastedDraft"
-            :can-import-hotspots="canImportManualHotspots"
-            :can-build-from-draft="canCheckDraft"
             :is-loading="isLoading"
-            @generate-prompt="buildPrompt"
             @copy-prompt="copyPrompt"
             @import-draft="importPastedDraft"
-            @import-hotspots="importManualHotspots"
           />
 
           <ArticleLibrary

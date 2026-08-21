@@ -428,9 +428,9 @@ select:focus {
   align-items: center;
 }
 
-.prompt-box {
+.prompt-builder {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin: 12px 0 18px;
   padding: 12px;
   border: 1px solid #dbe3ef;
@@ -438,84 +438,16 @@ select:focus {
   background: #f8fafc;
 }
 
-.prompt-box small {
-  color: #64748b;
-}
-
-.step-tabs {
+.prompt-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 12px 0;
 }
 
-.step-tab {
-  padding: 8px 12px;
-  color: #475569;
-}
-
-.step-tab.active {
-  border-color: #2563eb;
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.step-panel {
-  display: grid;
-  gap: 12px;
-  margin: 12px 0 16px;
-  padding: 12px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.workflow-card {
-  display: grid;
-  gap: 12px;
-  margin: 12px 0;
-  padding: 12px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.workflow-step {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.workflow-step strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.workflow-step .hint {
-  margin: 0;
-}
-
-.search-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.search-row a {
-  display: block;
-  padding: 8px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #1f2937;
-  text-align: center;
-  text-decoration: none;
-}
-
-.search-row a:hover {
-  border-color: #94a3b8;
-  background: #ffffff;
+.prompt-editor {
+  min-height: 360px;
+  font-family: Consolas, "Microsoft YaHei", monospace;
+  line-height: 1.65;
 }
 
 .choice-row {

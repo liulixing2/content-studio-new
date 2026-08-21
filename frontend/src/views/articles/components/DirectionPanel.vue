@@ -138,7 +138,7 @@ function clearKeywordConfig() {
       </button>
     </div>
 
-    <p v-if="!directions.length" class="empty">输入关键词后，可以本地生成方向，也可以在“生成设置”里粘贴平台热点或 DeepSeek 方向。</p>
+    <p v-if="!directions.length" class="empty">输入关键词后，可以本地生成方向，也可以在“生成正文 Prompt”里手动补充热词和要求。</p>
     <button
       v-for="direction in directions"
       :key="direction.title"
