@@ -11,7 +11,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -234,8 +235,19 @@ input {
   background: #ffffff;
 }
 
+select {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 9px 10px;
+  background: #ffffff;
+  color: #1f2937;
+}
+
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   outline: 2px solid #bfdbfe;
   border-color: #2563eb;
 }
@@ -456,6 +468,54 @@ textarea:focus {
   border: 1px solid #dbe3ef;
   border-radius: 8px;
   background: #f8fafc;
+}
+
+.workflow-card {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.workflow-step {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.workflow-step strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.workflow-step .hint {
+  margin: 0;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.search-row a {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+  text-align: center;
+  text-decoration: none;
+}
+
+.search-row a:hover {
+  border-color: #94a3b8;
+  background: #ffffff;
 }
 
 .choice-row {

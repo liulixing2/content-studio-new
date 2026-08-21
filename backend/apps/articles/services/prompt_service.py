@@ -15,6 +15,8 @@ def build_manual_prompt(stage, context):
     title = context.get("title") or ""
     direction = context.get("direction") or {}
     draft_text = context.get("draft_text") or ""
+    manual_hotspots = context.get("manual_hotspots") or ""
+    template_type = context.get("template_type") or ""
 
     common_rules = [
         "请使用中文输出。",
@@ -83,6 +85,12 @@ def build_manual_prompt(stage, context):
         "",
         "【已有正文】",
         draft_text or "无",
+        "",
+        "【手动素材/热词】",
+        manual_hotspots or "无",
+        "",
+        "【期望模板】",
+        template_type or "无",
         "",
         "【任务要求】",
     ]

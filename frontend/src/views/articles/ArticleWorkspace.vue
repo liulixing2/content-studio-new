@@ -26,7 +26,6 @@ import ArticleLibrary from './components/ArticleLibrary.vue'
 import DirectionPanel from './components/DirectionPanel.vue'
 import DraftPreview from './components/DraftPreview.vue'
 import ManualAiPanel from './components/ManualAiPanel.vue'
-import ManualHotspotPanel from './components/ManualHotspotPanel.vue'
 import QualityPanel from './components/QualityPanel.vue'
 import TitlePanel from './components/TitlePanel.vue'
 
@@ -140,13 +139,14 @@ async function loadDraft() {
   }, '已生成临时草稿，刷新前请确认是否保存。')
 }
 
-async function buildPrompt(stage: string) {
+async function buildPrompt(stage: string, extraContext: Record<string, unknown> = {}) {
   await runAction(async () => {
     const result = await generateManualPrompt(stage, {
       keywords: keywords.value,
       title: selectedTitle.value,
       direction: selectedDirection.value,
       draft_text: rendered.value?.text ?? '',
+      ...extraContext,
     })
     manualPrompt.value = result.prompt
     hasUnsavedTemporaryResult.value = true
@@ -357,24 +357,19 @@ onBeforeUnmount(() => {
             @generate="loadDirections"
           />
 
-          <ManualHotspotPanel
-            v-model:manual-hotspot-text="manualHotspotText"
-            :keywords="keywords"
-            :can-import="canImportManualHotspots"
-            :is-loading="isLoading"
-            @generate-direction-prompt="buildPrompt('hotspots')"
-            @import-hotspots="importManualHotspots"
-          />
-
           <ManualAiPanel
             v-model:pasted-text="pastedText"
+            v-model:manual-hotspot-text="manualHotspotText"
+            :keywords="keywords"
             :prompt="manualPrompt"
             :can-import="canImportPastedDraft"
+            :can-import-hotspots="canImportManualHotspots"
             :can-build-from-draft="canCheckDraft"
             :is-loading="isLoading"
             @generate-prompt="buildPrompt"
             @copy-prompt="copyPrompt"
             @import-draft="importPastedDraft"
+            @import-hotspots="importManualHotspots"
           />
 
           <ArticleLibrary
