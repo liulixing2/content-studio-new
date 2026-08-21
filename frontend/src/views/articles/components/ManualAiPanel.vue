@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { Direction } from '../../../types/article'
 
 const props = defineProps<{
@@ -69,19 +69,28 @@ defineEmits<{
   importDraft: []
 }>()
 
+function currentTemplateLines() {
+  const template = templateOptions.find((option) => option.name === selectedTemplate.value) || templateOptions[0]
+  return template.content
+}
+
+function directionLines() {
+  const direction = props.selectedDirection
+  return [
+    `关键词：${props.keywords || '请在这里填写关键词'}`,
+    direction ? `已选方向：${direction.title}` : '已选方向：请在这里填写文章方向',
+    direction?.reader_question ? `读者问题：${direction.reader_question}` : '',
+    direction?.angle ? `写作角度：${direction.angle}` : '',
+  ].filter(Boolean)
+}
+
 function appendBlock(title: string, lines: string[]) {
   const block = [`【${title}】`, ...lines].filter(Boolean).join('\n')
   promptText.value = [promptText.value.trim(), block].filter(Boolean).join('\n\n')
 }
 
 function insertDirection() {
-  const direction = props.selectedDirection
-  appendBlock('方向/分类', [
-    `关键词：${props.keywords || '请在这里填写关键词'}`,
-    direction ? `已选方向：${direction.title}` : '已选方向：请在这里填写文章方向',
-    direction?.reader_question ? `读者问题：${direction.reader_question}` : '',
-    direction?.angle ? `写作角度：${direction.angle}` : '',
-  ])
+  appendBlock('方向/分类', directionLines())
 }
 
 function insertTitle() {
@@ -89,31 +98,62 @@ function insertTitle() {
 }
 
 function insertHotwords() {
-  appendBlock('热词/补充要求', [manualHotspotText.value || '请在这里填写想保留的热词、关键词、角度或禁用表达'])
+  appendBlock('补充要求', [manualHotspotText.value || '请在这里填写想保留的热词、关键词、角度或禁用表达'])
 }
 
-function insertOutline() {
-  appendBlock('大纲', [
+function outlineLines() {
+  return [
     '请按这个结构写，也可以在保证标题一致的前提下微调：',
     '一、用具体场景打开话题',
     '二、解释这个对象为什么会被记住',
     '三、写现在回看时多出来的理解',
     '四、用一个问题收束到评论区',
-  ])
+  ]
+}
+
+function insertOutline() {
+  appendBlock('大纲', outlineLines())
 }
 
 function insertTemplate() {
-  const template = templateOptions.find((option) => option.name === selectedTemplate.value) || templateOptions[0]
-  appendBlock('模板', template.content)
+  appendBlock('模板', currentTemplateLines())
 }
 
 function resetPrompt() {
   promptText.value = ''
 }
 
-function buildBasePrompt() {
+function ruleLines() {
+  return [
+    '1. 不要解释写作过程，不要输出 Markdown 代码块。',
+    '2. 小标题必须顺序编号，不能出现两个“一、”。',
+    '3. 不要使用“开头切入”“正文展开”“结尾收束”这种模板小标题。',
+    '4. 正文最后只能有一个“互动话题”，不要再写“互动引导”。',
+    '5. 不要输出素材说明、版权说明、参考来源、配图建议。',
+    '6. 不要编造平台、数据、链接、发布时间或引用。',
+    '7. 每一节必须回应标题里的核心对象或核心问题。',
+    '8. 避免空泛套话，每一节都要有具体画面、判断或信息增量。',
+  ]
+}
+
+function buildFullPrompt() {
   promptText.value = [
     '请根据下面要求生成一篇可直接导入公众号编辑器的正文。',
+    '',
+    '【标题】',
+    props.selectedTitle || '请在这里输入标题',
+    '',
+    '【方向/分类】',
+    ...directionLines(),
+    '',
+    '【补充要求】',
+    manualHotspotText.value || '无',
+    '',
+    '【大纲】',
+    ...outlineLines(),
+    '',
+    '【模板】',
+    ...currentTemplateLines(),
     '',
     '输出格式必须严格包含：',
     '标题：',
@@ -124,32 +164,45 @@ function buildBasePrompt() {
     '互动话题：',
     '',
     '硬性要求：',
-    '1. 不要解释写作过程，不要输出 Markdown 代码块。',
-    '2. 小标题必须顺序编号，不能出现两个“一、”。',
-    '3. 不要使用“开头切入”“正文展开”“结尾收束”这种模板小标题。',
-    '4. 正文最后只能有一个“互动话题”，不要再写“互动引导”。',
-    '5. 不要输出素材说明、版权说明、参考来源、配图建议。',
-    '6. 不要编造平台、数据、链接、发布时间或引用。',
-    '7. 每一节必须回应标题里的核心对象或核心问题。',
-    '8. 避免空泛套话，每一节都要有具体画面、判断或信息增量。',
+    ...ruleLines(),
   ].join('\n')
 }
+
+function insertRules() {
+  appendBlock('硬性要求', ruleLines())
+}
+
+onMounted(() => {
+  buildFullPrompt()
+})
 
 </script>
 
 <template>
   <section class="panel manual-panel">
-    <h3>生成正文 Prompt</h3>
-    <p class="hint">这里是最终复制给 DeepSeek 免费版的大输入框。按钮只是插入内容，你可以继续手动改。</p>
+    <div class="section-title-row">
+      <div>
+        <h3>生成正文</h3>
+        <p class="hint">上面写需求，下面粘正文。需求框可以直接改，复制后去 DeepSeek 免费版生成。</p>
+      </div>
+    </div>
 
-    <div class="prompt-builder">
+    <div class="prompt-builder prompt-block">
+      <div class="block-head">
+        <div>
+          <strong>需求</strong>
+          <span>标题、大纲、模板都在这个大框里</span>
+        </div>
+        <button type="button" @click="buildFullPrompt">同步完整需求</button>
+      </div>
+
       <div class="prompt-toolbar">
-        <button type="button" @click="buildBasePrompt">基础规则</button>
         <button type="button" @click="insertDirection">方向/分类</button>
         <button type="button" @click="insertTitle">标题</button>
-        <button type="button" @click="insertHotwords">热词</button>
+        <button type="button" @click="insertHotwords">补充要求</button>
         <button type="button" @click="insertOutline">大纲</button>
         <button type="button" @click="insertTemplate">模板</button>
+        <button type="button" @click="insertRules">硬性要求</button>
       </div>
 
       <label>
@@ -160,12 +213,16 @@ function buildBasePrompt() {
       </label>
 
       <label>
-        热词 / 补充要求（可选）
-        <textarea v-model="manualHotspotText" rows="3" placeholder="例如：强调童年暗号、不要写成清单、不要提全网热议"></textarea>
+        补充要求（可选）
+        <textarea
+          v-model="manualHotspotText"
+          rows="3"
+          placeholder="例如：强调童年暗号、不要写成清单、不要提全网热议。填完点“同步完整需求”会进入大框。"
+        ></textarea>
       </label>
 
       <label>
-        DeepSeek 输入框
+        复制给 DeepSeek 的需求
         <textarea
           v-model="promptText"
           class="prompt-editor"
@@ -180,12 +237,21 @@ function buildBasePrompt() {
       </div>
     </div>
 
-    <label>
-      粘贴 DeepSeek 返回正文
-      <textarea v-model="pastedText" rows="8" placeholder="把 DeepSeek 生成的公众号正文粘贴到这里；没选标题时会尝试用第一行作为标题"></textarea>
-    </label>
-    <div class="actions">
-      <button type="button" :disabled="isLoading || !canImport" @click="$emit('importDraft')">导入并套公众号模板</button>
+    <div class="prompt-builder response-block">
+      <div class="block-head">
+        <div>
+          <strong>正文</strong>
+          <span>把 DeepSeek 返回内容粘到这里，再套公众号模板</span>
+        </div>
+      </div>
+
+      <label>
+        DeepSeek 返回正文
+        <textarea v-model="pastedText" rows="10" placeholder="把 DeepSeek 生成的公众号正文粘贴到这里；没选标题时会尝试用第一行作为标题"></textarea>
+      </label>
+      <div class="actions">
+        <button type="button" :disabled="isLoading || !canImport" @click="$emit('importDraft')">导入并套公众号模板</button>
+      </div>
     </div>
   </section>
 </template>
