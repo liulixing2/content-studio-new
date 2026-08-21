@@ -22,7 +22,7 @@ function searchUrl(platform: 'baidu' | 'weibo' | 'bilibili') {
 
 <template>
   <section class="panel manual-hotspot-panel">
-    <h3>2. 平台/DeepSeek 粘贴生成方向</h3>
+    <h3>方向来源</h3>
     <p class="hint">
       可以从百度、微博、B站复制热点，也可以去 DeepSeek 生成可写方向后粘贴回来；这里仍然只是整理临时方向。
     </p>

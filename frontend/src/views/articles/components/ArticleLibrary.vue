@@ -16,7 +16,7 @@ defineEmits<{
 <template>
   <section class="panel saved">
     <div class="preview-head">
-      <h3>7. 作品库</h3>
+      <h3>作品库</h3>
       <button type="button" @click="$emit('refresh')">刷新</button>
     </div>
 

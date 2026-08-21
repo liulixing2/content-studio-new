@@ -52,6 +52,13 @@ const canSaveDraft = computed(() => Boolean(draft.value))
 const canImportPastedDraft = computed(() => Boolean(pastedText.value.trim()))
 const canCheckDraft = computed(() => Boolean(draft.value))
 const canImportManualHotspots = computed(() => Boolean(keywords.value.trim() && manualHotspotText.value.trim()))
+const currentArticleStatus = computed(() => {
+  if (draft.value) return '临时稿已生成'
+  if (selectedTitle.value) return '标题已选择'
+  if (selectedDirection.value) return '方向已选择'
+  return '等待选题'
+})
+const currentDirectionTitle = computed(() => selectedDirection.value?.title || '还没有选择方向')
 
 async function runAction(action: () => Promise<string | void>, successText: string) {
   isLoading.value = true
@@ -297,71 +304,87 @@ onBeforeUnmount(() => {
     <main class="workspace">
       <header class="topbar">
         <div>
-          <h2>公众号文章生成</h2>
-          <p>关键词生成方向、标题、临时草稿；确认后再保存作品库。</p>
+          <h2>公众号文章工作台</h2>
+          <p>围绕一篇当前文章完成选题、写稿、检查、复制和保存。</p>
         </div>
         <div class="status">{{ statusText }}</div>
       </header>
 
-      <section class="grid">
-        <DirectionPanel
-          v-model:keywords="keywords"
-          v-model:selected-direction="selectedDirection"
-          :directions="directions"
-          :is-loading="isLoading"
-          @generate="loadDirections"
-        />
+      <section class="article-workbench">
+        <main class="article-main">
+          <section class="current-article-card">
+            <div>
+              <span class="eyebrow">当前文章</span>
+              <h3>{{ selectedTitle || '还没有确定标题' }}</h3>
+              <p>{{ currentDirectionTitle }}</p>
+            </div>
+            <div class="state-stack">
+              <span>{{ currentArticleStatus }}</span>
+              <small>{{ keywords }}</small>
+            </div>
+          </section>
 
-        <ManualHotspotPanel
-          v-model:manual-hotspot-text="manualHotspotText"
-          :keywords="keywords"
-          :can-import="canImportManualHotspots"
-          :is-loading="isLoading"
-          @generate-direction-prompt="buildPrompt('hotspots')"
-          @import-hotspots="importManualHotspots"
-        />
+          <TitlePanel
+            v-model:selected-title="selectedTitle"
+            :titles="titles"
+            :can-create-titles="canCreateTitles"
+            :can-create-draft="canCreateDraft"
+            :is-loading="isLoading"
+            @generate-titles="loadTitles"
+            @generate-draft="loadDraft"
+          />
 
-        <TitlePanel
-          v-model:selected-title="selectedTitle"
-          :titles="titles"
-          :can-create-titles="canCreateTitles"
-          :can-create-draft="canCreateDraft"
-          :is-loading="isLoading"
-          @generate-titles="loadTitles"
-          @generate-draft="loadDraft"
-        />
+          <DraftPreview
+            :draft="draft"
+            :rendered="rendered"
+            :can-save="canSaveDraft"
+            :is-loading="isLoading"
+            @copy-html="copyDraftHtml"
+            @copy-text="copyDraftText"
+            @save="saveDraft"
+            @export-word="exportCurrentDraftWord"
+          />
 
-        <ManualAiPanel
-          v-model:pasted-text="pastedText"
-          :prompt="manualPrompt"
-          :can-import="canImportPastedDraft"
-          :can-build-from-draft="canCheckDraft"
-          :is-loading="isLoading"
-          @generate-prompt="buildPrompt"
-          @copy-prompt="copyPrompt"
-          @import-draft="importPastedDraft"
-        />
+          <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
+        </main>
 
-        <DraftPreview
-          :draft="draft"
-          :rendered="rendered"
-          :can-save="canSaveDraft"
-          :is-loading="isLoading"
-          @copy-html="copyDraftHtml"
-          @copy-text="copyDraftText"
-          @save="saveDraft"
-          @export-word="exportCurrentDraftWord"
-        />
+        <aside class="toolbox">
+          <DirectionPanel
+            v-model:keywords="keywords"
+            v-model:selected-direction="selectedDirection"
+            :directions="directions"
+            :is-loading="isLoading"
+            @generate="loadDirections"
+          />
 
-        <QualityPanel :report="qualityReport" :can-check="canCheckDraft" :is-loading="isLoading" @check="checkCurrentDraft" />
+          <ManualHotspotPanel
+            v-model:manual-hotspot-text="manualHotspotText"
+            :keywords="keywords"
+            :can-import="canImportManualHotspots"
+            :is-loading="isLoading"
+            @generate-direction-prompt="buildPrompt('hotspots')"
+            @import-hotspots="importManualHotspots"
+          />
 
-        <ArticleLibrary
-          :articles="articles"
-          @open-article="openSavedArticle"
-          @refresh="loadLibrary"
-          @export-word="exportSavedWord"
-          @delete-article="deleteArticle"
-        />
+          <ManualAiPanel
+            v-model:pasted-text="pastedText"
+            :prompt="manualPrompt"
+            :can-import="canImportPastedDraft"
+            :can-build-from-draft="canCheckDraft"
+            :is-loading="isLoading"
+            @generate-prompt="buildPrompt"
+            @copy-prompt="copyPrompt"
+            @import-draft="importPastedDraft"
+          />
+
+          <ArticleLibrary
+            :articles="articles"
+            @open-article="openSavedArticle"
+            @refresh="loadLibrary"
+            @export-word="exportSavedWord"
+            @delete-article="deleteArticle"
+          />
+        </aside>
       </section>
     </main>
   </div>

@@ -54,7 +54,7 @@ function generateDraftPrompt(emit: (event: 'generatePrompt', stage: string) => v
 
 <template>
   <section class="panel manual-panel">
-    <h3>4. 手动 DeepSeek</h3>
+    <h3>DeepSeek 助手</h3>
     <p class="hint">这里只生成 Prompt，不会自动调用 DeepSeek。复制到免费版，结果粘回来再导入。</p>
 
     <div class="step-tabs">

@@ -52,7 +52,7 @@ function clearKeywordConfig() {
 
 <template>
   <section class="panel">
-    <h3>1. 关键词与方向</h3>
+    <h3>选题设置</h3>
     <p class="hint">可以直接输入关键词，也可以展开配置后自动生成。</p>
 
     <div class="keyword-summary">
@@ -138,7 +138,7 @@ function clearKeywordConfig() {
       </button>
     </div>
 
-    <p v-if="!directions.length" class="empty">输入关键词后，可以本地生成方向，也可以在右侧粘贴 DeepSeek 生成的方向。</p>
+    <p v-if="!directions.length" class="empty">输入关键词后，可以本地生成方向，也可以在“方向来源”里粘贴平台热点或 DeepSeek 方向。</p>
     <button
       v-for="direction in directions"
       :key="direction.title"
