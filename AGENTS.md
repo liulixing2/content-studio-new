@@ -1,63 +1,67 @@
-# Codex Project Rules
+# Codex 项目规则 / Project Rules
 
-This file is the project-level anchor for Codex work in this repository. Read it before changing code.
+这个文件是本仓库的 Codex 防漂移规则。以后改代码前必须先看这里，不要只靠对话历史。
 
-## Current Scope
+## 1. 当前范围 / Current Scope
 
-- Work only in the new project: `F:\codex\project\content_studio_new`.
-- Do not modify or revive the old project under `_legacy_disabled`.
-- Current active module is WeChat public-account articles only.
-- Do not implement video packages, novel generation, image generation, real hotspot scraping, or automatic DeepSeek calls unless the user explicitly starts that phase.
+- 只在新项目里工作：`F:\codex\project\content_studio_new`。
+- 不修改、不引用、不恢复旧项目：`_legacy_disabled`。
+- 当前阶段只做公众号文章模块。
+- 用户没有明确开启下一阶段前，不做视频包、小说、图片生成、真实热点抓取、自动 DeepSeek 调用。
 
-## Product Flow Lock
+## 2. 当前产品主流程 / Product Flow Lock
 
-The current article flow is:
+公众号文章当前固定流程：
 
 ```text
-requirements prompt -> copy to DeepSeek manually -> paste returned article -> apply WeChat template -> quality check -> copy rich text -> user confirms save
+需求 Prompt -> 手动复制到 DeepSeek -> 粘贴 DeepSeek 返回正文 -> 套公众号模板 -> 发布检查 -> 复制富文本 -> 用户确认保存
 ```
 
-UI rule for the article page:
+公众号页面布局固定规则：
 
-- Keep the left navigation.
-- Keep the main article workspace in the center column.
-- The main workspace must show requirements above returned正文.
-- The requirement prompt must support these editable modules: base rules, direction/category, title, hotwords, outline, template.
-- Do not restore the right-side generation toolbox unless the user explicitly asks.
-- Auxiliary settings and library may be folded or secondary, but must remain usable.
+- 左侧导航保留。
+- 中间是主工作区。
+- 主工作区上面是“需求”，下面是“正文”。
+- 需求区必须支持这些可编辑模块：基础规则、方向/分类、标题、热词、大纲、模板。
+- 不要恢复右侧生成工具栏，除非用户明确要求。
+- 辅助设置和作品库可以折叠或放次级区域，但功能不能丢。
 
-## Hard Prohibitions
+## 3. 禁止事项 / Hard Prohibitions
 
-- Do not call DeepSeek, scrape the web, generate images, or run batch tasks automatically.
-- Do not make hidden loops or background retries.
-- Do not auto-save generated content. Save only after the user clicks save and confirms.
-- Do not hard-code topic words such as a specific anime, person, movie, era, or title into general prompts.
-- Do not reintroduce old template phrases or fallback text that looks like a system note.
-- Do not output default interaction text or material/copyright notes unless the user provided them or explicitly wants them.
-- Do not let repeated prompt-module clicks append unlimited duplicate blocks; update the relevant block instead.
-- Do not treat mock/local data as real web trends.
+- 禁止自动调用 DeepSeek。
+- 禁止自动联网、自动抓热点、自动生成图片、自动批量任务。
+- 禁止隐藏循环和后台无限重试。
+- 生成内容默认是临时内容，禁止自动保存。
+- 只有用户点击保存并确认后，才能写入作品库。
+- 通用 Prompt 里禁止写死具体题材词，例如某个动漫、人物、电影、年代或标题。
+- 禁止恢复旧模板句式、旧兜底文案、像后台提示的默认说明。
+- 用户没有提供互动或素材说明时，禁止自动追加默认互动、默认素材说明、默认版权说明。
+- Prompt 模块按钮重复点击时，必须更新对应模块，不能无限追加重复块。
+- mock、本地数据、本地素材不能伪装成真实网络热点。
 
-## Acceptance Checklist
+## 4. 验收清单 / Acceptance Checklist
 
-For article changes, verify the relevant items before final response:
+改公众号文章相关功能后，至少检查相关项：
 
-- Direction/category can be edited manually.
-- Title can be edited manually and does not become a fake default title.
-- Requirement module buttons update or insert the matching block without duplicate stacking.
-- The copied DeepSeek prompt contains title, direction/category, outline, template, and hard rules when synced.
-- Pasted正文 imports into the WeChat template without adding default interaction or default material notes.
-- Empty headings such as `一、` become readable headings or are rejected.
-- Obvious test content such as repeated digits is not publishable.
-- Rich text copy, plain text copy, quality check, save, open, delete, and Word export are not broken by layout changes.
+- 方向/分类可以手动编辑。
+- 标题可以手动编辑，不会变成假的默认标题。
+- 基础规则、方向/分类、标题、热词、大纲、模板按钮不会重复叠加同一模块。
+- 同步后的 DeepSeek 需求 Prompt 包含标题、方向/分类、大纲、模板、硬性规则。
+- 粘贴正文导入后，不会自动追加默认互动和默认素材说明。
+- `互动话题：` 能识别为互动区，不应再额外生成 `互动引导：`。
+- 空小标题，例如单独一行 `一、`，必须变成可读小标题或被判为问题。
+- 明显测试内容，例如连续重复数字，不能通过发布检查。
+- 布局调整不能破坏复制富文本、复制纯文本、发布检查、保存、打开、删除、导出 Word。
 
-## Engineering Rules
+## 5. 工程规则 / Engineering Rules
 
-- Read the real target files before editing.
-- Keep diffs narrow. Do not refactor unrelated files.
-- Prefer existing Vue, DRF, and service patterns already in this repo.
-- Do not add dependencies, change lockfiles, change build config, or change data storage unless the user explicitly asks.
-- If the same problem fails 3 times, stop and report the latest error instead of continuing.
-- For code changes, run the smallest relevant checks. At minimum for frontend/article work:
+- 改代码前先读真实目标文件，不凭记忆改。
+- 只做用户当前请求，不顺手扩功能。
+- 保持最小 diff，不重构无关文件。
+- 优先沿用本项目已有 Vue、DRF、service 拆分方式。
+- 不新增依赖，不改 lockfile，不改构建配置，不改存储方式，除非用户明确要求。
+- 同一个问题连续失败 3 次后必须停止，并说明最新错误。
+- 改代码后运行最小必要检查。公众号前端/后端改动至少跑：
 
 ```powershell
 npm run build
@@ -65,11 +69,18 @@ backend\.venv\Scripts\python.exe backend\manage.py check
 git diff --check
 ```
 
-## Git
+如果只是文档改动，可以只跑：
 
-- Work on `dev` unless the user explicitly asks otherwise.
-- Important completed changes should be pushed to both remotes:
-- Remote pushes use SSH and sandboxed port 22 fails. For `git push github dev` and `git push gitee dev`, request escalated execution directly; do not first run a sandboxed push that is expected to fail.
+```powershell
+git diff --check
+```
+
+## 6. Git 规则 / Git Rules
+
+- 默认在 `dev` 分支工作，除非用户明确要求其他分支。
+- 重要完成项同时推送 GitHub 和 Gitee。
+- 当前远程使用 SSH，沙箱内 22 端口会失败。
+- 执行下面两个 push 时，直接申请外部执行权限，不要先跑一次必然失败的普通 push。
 
 ```powershell
 git push github dev
